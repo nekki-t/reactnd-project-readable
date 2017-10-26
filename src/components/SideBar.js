@@ -15,12 +15,11 @@ import { loadCategories, categoriesLoaded } from '../actions/categoriesAction';
 
 
 class SideBar extends Component {
-  constructor(props, context) {
-    super(props, context);
-  }
 
   componentWillMount() {
-    this.props.actions.loadCategories();
+    if(this.props.author) {
+      this.props.actions.loadCategories();
+    }
   }
 
   render () {

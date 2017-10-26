@@ -13,6 +13,7 @@ export const API = {
 };
 
 export const URL = {
+  LOGIN: '/login',
   ROOT: '/',
   POST: '/:post',
   NEW_POST: '/new_post'

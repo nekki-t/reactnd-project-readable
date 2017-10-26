@@ -5,12 +5,12 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { loadPosts, postsLoaded } from '../actions/postsActions';
 /*--- Matrial UI ---*/
-import { Card, CardActions, CardHeader, CardText, CardTitle } from 'material-ui/Card';
+import { Card, CardActions, CardText, CardTitle } from 'material-ui/Card';
 import Chip from 'material-ui/Chip';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
 /*--- Shared ---*/
-import { URL } from '../constants';
+import { URL } from '../shared/constants';
 import utilities from '../shared/utilities';
 
 class Main extends Component {
@@ -109,6 +109,7 @@ Main.contextTypes = {
 };
 
 const mapStateToProps = (state) => ({
+  author: state.session.author,
   loading: state.post.loading,
   posts: state.post.posts,
 });

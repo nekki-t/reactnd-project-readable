@@ -5,7 +5,7 @@ const initialState = {
   categories: []
 };
 
-export default function categoryReducer (state = initialState, action = {}) {
+export default (state = initialState, action = {}) => {
   const { loading, categories } = action;
 
   switch(action.type) {
@@ -23,4 +23,4 @@ export default function categoryReducer (state = initialState, action = {}) {
     default:
       return state;
   }
-}
+};

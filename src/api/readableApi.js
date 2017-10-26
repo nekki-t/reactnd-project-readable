@@ -1,17 +1,15 @@
-import { API } from '../constants';
+import { API } from '../shared/constants';
 import axios from 'axios';
 
 class ReadableApi {
 
   /* === < Categories > =================================================================== */
   static fetchCategories() {
-    return axios.get
-    (
+    return axios.get(
       API.categories,
       API.headers,
     )
   }
-
   /* === < Posts > =================================================================== */
   static fetchPosts() {
     return axios.get(
@@ -19,7 +17,6 @@ class ReadableApi {
       API.headers,
     )
   }
-
 }
 
 export default ReadableApi;
