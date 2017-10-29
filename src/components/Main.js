@@ -79,6 +79,35 @@ class Main extends Component {
       bottom: 25
     };
 
+    const toolBar = (
+      this.props.user &&
+      <Toolbar style={styles.toolbar}>
+        <ToolbarGroup firstChild={true}>
+          <SearchIcon style={{marginLeft: 10}}/>
+          <TextField
+            id="text-field-default"
+          />
+
+        </ToolbarGroup>
+        <ToolbarGroup>
+          <ToolbarSeparator />
+          <IconMenu
+            iconButtonElement={
+              <IconButton touch={true}>
+                <SortIcon />
+              </IconButton>
+            }
+          >
+            <MenuItem primaryText="Download" />
+            <MenuItem primaryText="More Info" />
+          </IconMenu>
+          <span>
+              Sort List
+            </span>
+
+        </ToolbarGroup>
+      </Toolbar>
+    );
 
     return (
       <div style={styles.main}>
@@ -87,34 +116,8 @@ class Main extends Component {
           withOverLay={true}
         />
         }
-        <Toolbar style={styles.toolbar}>
-          <ToolbarGroup firstChild={true}>
-            <SearchIcon style={{marginLeft: 10}}/>
-            <TextField
-              id="text-field-default"
-            />
-
-          </ToolbarGroup>
-          <ToolbarGroup>
-            <ToolbarSeparator />
-            <IconMenu
-              iconButtonElement={
-                <IconButton touch={true}>
-                  <SortIcon />
-                </IconButton>
-              }
-            >
-              <MenuItem primaryText="Download" />
-              <MenuItem primaryText="More Info" />
-            </IconMenu>
-            <span>
-              Sort List
-            </span>
-
-          </ToolbarGroup>
-        </Toolbar>
-
-        {this.props.author && this.state.posts && this.state.posts.map((post) =>
+        {toolBar}
+        {this.props.user && this.state.posts && this.state.posts.map((post) =>
           <Card
             key={post.id}
             style={styles.card}
@@ -133,16 +136,14 @@ class Main extends Component {
               subtitleColor="#ccc"
               style={styles.cardHeader}
             />
-
             <CardText>
               {post.body}
             </CardText>
             <CardActions>
-
             </CardActions>
           </Card>
         )}
-        {this.props.author &&
+        {this.props.user &&
         <FloatingActionButton
           style={styles.openSearchButton}
           href={URL.NEW_POST}
@@ -161,7 +162,7 @@ Main.contextTypes = {
 };
 
 const mapStateToProps = (state) => ({
-  author: state.session.author,
+  user: state.session.user,
   loading: state.post.loading,
   posts: state.post.posts,
 });

@@ -62,17 +62,14 @@ class App extends Component {
       </span>
     );
 
-    const logoutButton =() => {
-      if (this.props.username) {
-        return (
-          <RaisedButton
-            label="ログアウト"
-            onClick={this.logout}
-            style={{marginTop: 5}}
-          />
-        )
-      }
-    };
+    const logoutButton = (
+      this.props.user &&
+      <RaisedButton
+        label="ログアウト"
+        onClick={this.logout}
+        style={{marginTop: 5}}
+      />
+    );
 
     return (
       <div className="base">
@@ -80,7 +77,7 @@ class App extends Component {
           title={appbarTitle}
           style={styles.appBar}
           onLeftIconButtonTouchTap={this.toggleCategoryBar}
-          iconElementRight={logoutButton()}
+          iconElementRight={logoutButton}
         />
         <div>
           <SideBar
@@ -112,7 +109,7 @@ App.contextTypes = {
 
 const mapStateToProps = (state) => ({
   loading: state.session.loading,
-  username: state.session.username,
+  user: state.session.user,
 });
 
 const mapDispatchToProps = (dispatch) => ({

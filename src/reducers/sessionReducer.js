@@ -1,12 +1,21 @@
-import { SESSION_ACCESSING, SESSION_LOGOUT, SESSION_NOT_STARTED, SESSION_START } from '../actions/actionTypes';
+import {
+  SESSION_ACCESSING,
+  SESSION_LOGOUT,
+  SESSION_NOT_STARTED,
+  SESSION_USER_CREATED,
+  SESSION_USER_NOT_CREATED,
+  SESSION_START
+} from '../actions/actionTypes';
 
 const initialState = {
-  author: null,
+  user: null,
   loading: false,
+  userCreated: false,
+  loggedIn: false,
 };
 
 export default (state = initialState, action = {}) => {
-  const { author, loading} = action;
+  const { user, loading, errorMessage, userCreated } = action;
   switch (action.type) {
     case SESSION_NOT_STARTED:
       return state;
@@ -15,11 +24,24 @@ export default (state = initialState, action = {}) => {
         ...state,
         loading,
       };
+    case SESSION_USER_CREATED:
+      return {
+        ...state,
+        loading,
+        user,
+        userCreated,
+      };
+    case SESSION_USER_NOT_CREATED:
+      return {
+        ...state,
+        loading,
+        errorMessage,
+      };
     case SESSION_START:
-      if (author) {
+      if (user) {
         return {
           ...state,
-          author,
+          user,
           loading,
         }
       }

@@ -3,7 +3,10 @@ import {
   SESSION_ACCESSING,
   SESSION_START,
   SESSION_LOGOUT,
-  SESSION_TERMINATED, SESSION_NOT_STARTED,
+  SESSION_TERMINATED,
+  SESSION_NOT_STARTED,
+  SESSION_USER_CREATED,
+  SESSION_USER_NOT_CREATED,
 } from './actionTypes';
 
 import sessionApi from '../api/sessionApi';
@@ -22,10 +25,23 @@ export const startAccessing = () => ({
   loading: true,
 });
 
-export const sessionStart = (author) => ({
+export const sessionStart = (username) => ({
   type: SESSION_START,
   loading: false,
-  author: author
+  user: username,
+});
+
+export const userCreated = (username) => ({
+  type: SESSION_USER_CREATED,
+  loading: false,
+  user: username,
+  userCreated: true,
+});
+
+export const userNotCreated = (errorMessage) => ({
+  type: SESSION_USER_NOT_CREATED,
+  loading: false,
+  errorMessage,
 });
 
 export const initialize = () => {
@@ -33,8 +49,8 @@ export const initialize = () => {
     return sessionApi.isLoggedIn()
       .then(
         response => {
-          if (response.author) {
-            startUp(dispatch, response.author);
+          if (response.username) {
+            startUp(dispatch, response.username);
           } else {
             window.location.href = URL.LOGIN;
           }
@@ -49,13 +65,30 @@ export const login = (username, password) => {
     return sessionApi.login(username, password)
       .then(
         response => {
-          if(response.username) {
-            startUp(dispatch, response.author);
+          if(response.errorMessage) {
+          } else {
+            startUp(dispatch, response.username);
+            window.location.href = URL.ROOT;
           }
-          return response.username;
         }
       )
   };
+};
+
+export const create = (username, password) => {
+  return (dispatch) => {
+    dispatch(startAccessing());
+    return sessionApi.create(username, password)
+      .then(
+        response => {
+          if(response.errorMessage) {
+            dispatch(userNotCreated(response.errorMessage))
+          } else {
+            dispatch(userCreated(username));
+          }
+        }
+      )
+  }
 };
 
 export const logout = () => {
@@ -71,9 +104,8 @@ export const logout = () => {
 };
 
 
-
-const startUp = (dispatch, author) => {
-  dispatch(sessionStart(author));
-  dispatch(loadPosts(author));
+const startUp = (dispatch, user) => {
+  dispatch(sessionStart(user));
+  dispatch(loadPosts(user));
   dispatch(loadCategories());
 };
