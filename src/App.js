@@ -1,11 +1,17 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { withRouter, Route, Switch } from 'react-router-dom';
+import { Route, Switch, withRouter } from 'react-router-dom';
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
-
+/*--- Redux ---*/
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import { loadPosts } from './actions/postsActions';
+import { logout } from './actions/sessionAction';
+/*--- CSS ---*/
 import './App.css';
 /*--- Material UI ---*/
 import AppBar from 'material-ui/AppBar';
+import RaisedButton from 'material-ui/RaisedButton';
 /*--- Constants ---*/
 import { URL } from './shared/constants';
 /*--- Components ---*/
@@ -19,6 +25,7 @@ class App extends Component {
     this.state = {categoryBarOpened: false};
 
     this.toggleCategoryBar = this.toggleCategoryBar.bind(this);
+    this.titleClick = this.titleClick.bind(this);
   }
 
   toggleCategoryBar() {
@@ -26,6 +33,15 @@ class App extends Component {
       categoryBarOpened: !this.state.categoryBarOpened
     });
   }
+
+  titleClick = () => {
+    this.context.router.history.push(URL.ROOT);
+    this.props.actions.loadPosts();
+  };
+
+  logout = () => {
+    this.props.actions.logout();
+  };
 
   render() {
     const styles = {};
@@ -38,14 +54,33 @@ class App extends Component {
 
     const location = this.context.router.route.location;
 
+    const appbarTitle = (
+      <span
+        style={styles.title}
+        onClick={this.titleClick}>
+              Readable
+      </span>
+    );
+
+    const logoutButton =() => {
+      if (this.props.username) {
+        return (
+          <RaisedButton
+            label="ログアウト"
+            onClick={this.logout}
+            style={{marginTop: 5}}
+          />
+        )
+      }
+    };
+
     return (
       <div className="base">
         <AppBar
-          title="Readable"
+          title={appbarTitle}
           style={styles.appBar}
-          titleStyle={styles.title}
           onLeftIconButtonTouchTap={this.toggleCategoryBar}
-          onTitleTouchTap={() => this.context.router.history.push(URL.ROOT)}
+          iconElementRight={logoutButton()}
         />
         <div>
           <SideBar
@@ -59,10 +94,10 @@ class App extends Component {
             transitionEnterTimeout={500}
             transitionLeaveTimeout={500}
           >
-              <Switch location={location} key={location.key}>
-                <Route exact={true} path={URL.ROOT} component={Main}/>
-                <Route path={URL.LOGIN} component={Login}/>
-              </Switch>
+            <Switch location={location} key={location.key}>
+              <Route exact={true} path={URL.ROOT} component={Main}/>
+              <Route path={URL.LOGIN} component={Login}/>
+            </Switch>
           </ReactCSSTransitionGroup>
 
         </div>
@@ -75,4 +110,13 @@ App.contextTypes = {
   router: PropTypes.object.isRequired,
 };
 
-export default withRouter(App);
+const mapStateToProps = (state) => ({
+  loading: state.session.loading,
+  username: state.session.username,
+});
+
+const mapDispatchToProps = (dispatch) => ({
+  actions: bindActionCreators({loadPosts, logout}, dispatch)
+});
+
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(App));

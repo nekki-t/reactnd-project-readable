@@ -4,32 +4,37 @@ const localStorage = window.localStorage;
 class sessionApi {
 
   static isLoggedIn() {
-    const { loginAuthor } = localStorage;
+    const { udacityCurrentLoginUser } = localStorage;
     return new Promise((resolve) => {
+      // imitating asynchronous time...
       setTimeout(() => {
-        if (loginAuthor) {
-          resolve({loginAuthor});
+        if (udacityCurrentLoginUser) {
+          resolve({username: udacityCurrentLoginUser});
         } else {
-          resolve({loginAuthor: null});
+          resolve({username: null});
         }
       }, delay);
     });
   }
 
-  static login(author) {
-    const { authors } = localStorage;
+  static login(username, password) {
+    const { udacityUsers } = localStorage;
     return new Promise((resolve) => {
       setTimeout(() => {
-        if(authors && authors[author]) {
-          resolve({author});
-        } else {
-          resolve({author: null})
-        }
+        localStorage.udacityCurrentLoginUser = username;
+        resolve({ username });
       }, delay);
     });
   }
 
-  static createUser(user, password) {
+  static logout() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        localStorage.udacityCurrentLoginUser = null;
+        resolve({ username: null })
+      })
+    });
+
   }
 }
 

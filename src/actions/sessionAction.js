@@ -1,6 +1,6 @@
 import {
   SESSION_LOAD,
-  SESSION_LOGIN,
+  SESSION_ACCESSING,
   SESSION_START,
   SESSION_LOGOUT,
   SESSION_TERMINATED, SESSION_NOT_STARTED,
@@ -8,12 +8,17 @@ import {
 
 import sessionApi from '../api/sessionApi';
 
+import { loadCategories } from './categoriesAction';
+import { loadPosts } from './postsActions';
+
+import { URL } from '../shared/constants';
+
 export const sessionNotStarted = () => ({
   type: SESSION_NOT_STARTED,
 });
 
-export const startLogin = () => ({
-  type: SESSION_LOGIN,
+export const startAccessing = () => ({
+  type: SESSION_ACCESSING,
   loading: true,
 });
 
@@ -28,24 +33,47 @@ export const initialize = () => {
     return sessionApi.isLoggedIn()
       .then(
         response => {
-          if(response.author) {
-            dispatch(sessionStart(response.author));
+          if (response.author) {
+            startUp(dispatch, response.author);
           } else {
-            dispatch(sessionNotStarted());
+            window.location.href = URL.LOGIN;
           }
         }
       );
   }
 };
 
-export const login = (author) => {
+export const login = (username, password) => {
   return (dispatch) => {
-    dispatch(startLogin());
-    return sessionApi.login(author)
+    dispatch(startAccessing());
+    return sessionApi.login(username, password)
       .then(
         response => {
-          dispatch(sessionStart(response.author))
+          if(response.username) {
+            startUp(dispatch, response.author);
+          }
+          return response.username;
         }
       )
   };
+};
+
+export const logout = () => {
+  return (dispatch) => {
+    dispatch(startAccessing());
+    return sessionApi.logout()
+      .then(
+        _ => {
+          window.location.href = URL.LOGIN;
+        }
+      );
+  }
+};
+
+
+
+const startUp = (dispatch, author) => {
+  dispatch(sessionStart(author));
+  dispatch(loadPosts(author));
+  dispatch(loadCategories());
 };

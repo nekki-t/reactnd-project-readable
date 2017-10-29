@@ -13,7 +13,7 @@ class Loading extends Component {
       right: 0,
       left: 0,
       bottom: 0,
-      zIndex: 1000,
+      zIndex: 10000,
       backgroundColor: 'rgba(56, 56, 56, 0.7)',
     };
 

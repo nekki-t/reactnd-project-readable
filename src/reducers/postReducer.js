@@ -7,7 +7,6 @@ const initialState = {
 
 export default (state = initialState, action = {}) => {
   const { loading, posts } = action;
-
   switch (action.type) {
     case START_LOAD_POSTS:
       return {
