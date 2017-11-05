@@ -18,6 +18,7 @@ import { URL } from './shared/constants';
 import SideBar from './components/SideBar';
 import Main from './components/Main';
 import Login from './components/Login';
+import Post from './components/Post';
 
 class App extends Component {
   constructor(props, context) {
@@ -46,10 +47,14 @@ class App extends Component {
   render() {
     const styles = {};
     styles.appBar = {
-      backgroundColor: '#3F51B5'
+      backgroundColor: '#3F51B5',
     };
     styles.title = {
       cursor: 'pointer'
+    };
+    styles.main = {
+      width: '70%',
+      margin: '15px auto',
     };
 
     const location = this.context.router.route.location;
@@ -65,7 +70,7 @@ class App extends Component {
     const logoutButton = (
       this.props.user &&
       <RaisedButton
-        label="ログアウト"
+        label="Logout"
         onClick={this.logout}
         style={{marginTop: 5}}
       />
@@ -84,19 +89,22 @@ class App extends Component {
             opened={this.state.categoryBarOpened}
             requestChange={this.toggleCategoryBar}
           />
-          <ReactCSSTransitionGroup
-            transitionName="transition"
-            transitionAppear={true}
-            transitionAppearTimeout={500}
-            transitionEnterTimeout={500}
-            transitionLeaveTimeout={500}
-          >
-            <Switch location={location} key={location.key}>
-              <Route exact={true} path={URL.ROOT} component={Main}/>
-              <Route path={URL.LOGIN} component={Login}/>
-            </Switch>
-          </ReactCSSTransitionGroup>
+          <div style={styles.main}>
 
+            <ReactCSSTransitionGroup
+              transitionName="transition"
+              transitionAppear={true}
+              transitionAppearTimeout={500}
+              transitionEnterTimeout={500}
+              transitionLeaveTimeout={500}
+            >
+              <Switch location={location} key={location.key}>
+                <Route exact={true} path={URL.ROOT} component={Main}/>
+                <Route path={URL.LOGIN} component={Login}/>
+                <Route path={URL.NEW_POST} component={Post}/>
+              </Switch>
+            </ReactCSSTransitionGroup>
+          </div>
         </div>
       </div>
     );

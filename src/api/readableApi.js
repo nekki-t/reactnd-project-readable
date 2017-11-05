@@ -1,5 +1,6 @@
 import { API } from '../shared/constants';
 import axios from 'axios';
+import { POST_ATTR } from '../shared/constants';
 
 class ReadableApi {
 
@@ -15,6 +16,14 @@ class ReadableApi {
     return axios.get(
       API.posts,
       API.headers,
+    )
+  }
+
+  static createPost (post) {
+    return axios.post(
+      API.posts,
+      post,
+      API.headers
     )
   }
 }

@@ -11,14 +11,17 @@ const initialState = {
   user: null,
   loading: false,
   userCreated: false,
-  loggedIn: false,
 };
 
 export default (state = initialState, action = {}) => {
   const { user, loading, errorMessage, userCreated } = action;
   switch (action.type) {
     case SESSION_NOT_STARTED:
-      return state;
+      return {
+        ...state,
+        loading,
+        errorMessage,
+      };
     case SESSION_ACCESSING:
       return {
         ...state,
@@ -38,15 +41,9 @@ export default (state = initialState, action = {}) => {
         errorMessage,
       };
     case SESSION_START:
-      if (user) {
-        return {
-          ...state,
-          user,
-          loading,
-        }
-      }
       return {
         ...state,
+        user,
         loading,
       };
     case SESSION_LOGOUT:

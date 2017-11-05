@@ -34,12 +34,6 @@ class Login extends Component {
     }
   }
 
-  componentWillReceiveProps(nextState) {
-    if (nextState.loggedIn) {
-      this.context.router.push(URL.ROOT);
-    }
-  }
-
   textInput = (targetId, value) => {
     this.setState({
       [targetId]: value
@@ -234,7 +228,6 @@ const mapStateToProps = (state) => ({
   user: state.session.user,
   errorMessage: state.session.errorMessage,
   userCreated: state.session.userCreated,
-  loggedIn: state.session.loggedIn,
 });
 
 const mapDispatchToProps = (dispatch) => ({

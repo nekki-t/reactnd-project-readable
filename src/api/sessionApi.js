@@ -29,6 +29,8 @@ class sessionApi {
         if(targetUser.password !== password) {
           // failed...
           errorMessage = "Your username or password is incorrect. Please check it and try again."
+        } else {
+          localStorage.udacityCurrentLoginUser = username;
         }
       } else {
         errorMessage = `Username "${username}" does not exist. Please make sure the username.`
@@ -56,7 +58,7 @@ class sessionApi {
         errorMessage = 'the username is already used. Please try again with a different username.'
       } else {
         udacityUsers.push(user);
-        localStorage.udacityUsers = JSON.stringify([udacityUsers]);
+        localStorage.udacityUsers = JSON.stringify(udacityUsers);
         localStorage.udacityCurrentLoginUser = username;
       }
     }

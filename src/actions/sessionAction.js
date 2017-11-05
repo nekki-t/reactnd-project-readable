@@ -16,8 +16,10 @@ import { loadPosts } from './postsActions';
 
 import { URL } from '../shared/constants';
 
-export const sessionNotStarted = () => ({
+export const sessionNotStarted = (errorMessage) => ({
   type: SESSION_NOT_STARTED,
+  loading: false,
+  errorMessage,
 });
 
 export const startAccessing = () => ({
@@ -50,7 +52,7 @@ export const initialize = () => {
       .then(
         response => {
           if (response.username) {
-            startUp(dispatch, response.username);
+            startUp(dispatch, response.username, false);
           } else {
             window.location.href = URL.LOGIN;
           }
@@ -66,8 +68,9 @@ export const login = (username, password) => {
       .then(
         response => {
           if(response.errorMessage) {
+            dispatch(sessionNotStarted(response.errorMessage));
           } else {
-            startUp(dispatch, response.username);
+            startUp(dispatch, response.username, true);
             window.location.href = URL.ROOT;
           }
         }
@@ -106,6 +109,5 @@ export const logout = () => {
 
 const startUp = (dispatch, user) => {
   dispatch(sessionStart(user));
-  dispatch(loadPosts(user));
   dispatch(loadCategories());
 };
