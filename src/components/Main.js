@@ -3,39 +3,64 @@ import PropTypes from 'prop-types';
 /*--- Redux ---*/
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { loadPosts, postsLoaded } from '../actions/postsActions';
+import { loadPosts, postsLoaded, voteForPost } from '../actions/postsActions';
 /*--- Matrial UI ---*/
-import { Card, CardActions, CardText, CardTitle } from 'material-ui/Card';
+import { Card, CardActions, CardTitle } from 'material-ui/Card';
 import Paper from 'material-ui/Paper';
 import { GridList, GridTile } from 'material-ui/GridList';
-import Chip from 'material-ui/Chip';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
 import { Toolbar, ToolbarGroup, ToolbarSeparator } from 'material-ui/Toolbar';
-import SortIcon from 'material-ui/svg-icons/content/sort';
-import SearchIcon from 'material-ui/svg-icons/action/search';
 import MenuItem from 'material-ui/MenuItem';
 import IconMenu from 'material-ui/IconMenu';
 import IconButton from 'material-ui/IconButton';
 import TextField from 'material-ui/TextField';
 import Avatar from 'material-ui/Avatar';
-import { red500, yellow500 } from 'material-ui/styles/colors';
-import Badge from 'material-ui/Badge';
+import { green500, orange500, red500, yellow500 } from 'material-ui/styles/colors';
+import SortIcon from 'material-ui/svg-icons/content/sort';
+import SearchIcon from 'material-ui/svg-icons/action/search';
 import ThumbUpIcon from 'material-ui/svg-icons/action/thumb-up';
+import ThumbDownIcon from 'material-ui/svg-icons/action/thumb-down';
+import CommentIcon from 'material-ui/svg-icons/communication/comment';
+import CheckIcon from 'material-ui/svg-icons/navigation/check';
+import ClearIcon from 'material-ui/svg-icons/content/clear';
+import ArrowUpward from 'material-ui/svg-icons/navigation/arrow-upward';
+import ArrowDownward from 'material-ui/svg-icons/navigation/arrow-downward';
+import RaisedButton from 'material-ui/RaisedButton';
+import Divider from 'material-ui/Divider';
 /*--- Libraries ---*/
-import sortBy from 'sort-by';
 /*--- Shared ---*/
-import { URL, POST_ATTR } from '../shared/constants';
+import { API, URL } from '../shared/constants';
 import utilities from '../shared/utilities';
 /*--- Children ---*/
 import Loading from './Loading';
+
+
+const sortTarget = {
+  Default: 'Default (Ranking)',
+  PostedAt: 'Posted at',
+  Title: 'Title',
+  Author: 'Author',
+  Category: 'Category',
+  ClearSort: 'Clear Sort',
+};
 
 class Main extends Component {
   constructor(props, context) {
     super(props, context);
     this.gotoPost = this.gotoPost.bind(this);
+    this.vote = this.vote.bind(this);
+    this.openSortMenu = this.openSortMenu.bind(this);
+    this.onSortMenuRequestChange = this.onSortMenuRequestChange.bind(this);
+    this.sortChanged = this.sortChanged.bind(this);
+    this.getArrow = this.getArrow.bind(this);
+    this.sortItemSelectedAgain = this.sortItemSelectedAgain.bind(this);
     this.state = {
+      sortMenuOpen: false,
       posts: [],
+      orgPosts: [],
+      sortBy: sortTarget.Default,
+      sortAsc: true,
     }
   }
 
@@ -43,7 +68,10 @@ class Main extends Component {
     // debugger;
     if (this.props.posts !== nextProps.posts) {
       console.log(nextProps.posts);
-      this.setState({posts: Object.assign([], nextProps.posts)})
+      this.setState({
+        posts: Object.assign([], nextProps.posts),
+        orgPosts: Object.assign([], nextProps.posts),
+      })
     }
   }
 
@@ -53,6 +81,62 @@ class Main extends Component {
 
   gotoPost = () => {
     this.context.router.history.push(URL.NEW_POST);
+  };
+
+  vote = (id, up) => {
+    let updownString = API.vote.upVote;
+    if (!up) {
+      updownString = API.vote.downVote;
+    }
+    this.props.actions.voteForPost(id, updownString);
+  };
+
+  openSortMenu = () => {
+    this.setState({
+      sortMenuOpen: true,
+    });
+  };
+
+  onSortMenuRequestChange = (value) => {
+    this.setState({
+      sortMenuOpen: value,
+    });
+  };
+
+  sortChanged = (event, value) => {
+    let asc = true;
+    if (value === this.state.sortBy) {
+      asc = !this.state.sortAsc;
+    }
+
+    this.setState({
+      sortBy: value,
+      sortAsc: asc,
+    });
+  };
+
+  sortItemSelectedAgain = (event, value) => {
+    console.log(event, value);
+
+  };
+
+  getArrow = (value) => {
+    if (value === this.state.sortBy) {
+      if (this.state.sortAsc) {
+        return (
+          < ArrowUpward />
+        )
+
+      } else {
+        return (
+          < ArrowDownward />
+        )
+      }
+    } else {
+      return (
+        <div></div>
+      )
+    }
   };
 
   render() {
@@ -66,14 +150,14 @@ class Main extends Component {
       marginLeft: 0,
     };
 
-    styles.chipStyle = {
-      ...styles.chip,
-      marginRight: 20,
+    styles.sortMenuTitle = {
+      cursor: 'pointer',
     };
 
     styles.gridList = {
       height: '80vh',
       overflowY: 'auto',
+      alignContent: 'flex-start'
     };
 
     styles.avatar = {
@@ -99,6 +183,26 @@ class Main extends Component {
       padding: 0
     };
 
+    styles.cardActions = {
+      display: 'flex',
+      justifyContent: 'space-between',
+    };
+
+    styles.cardActionsLeft = {
+      display: 'flex',
+      alignItems: 'center',
+    };
+
+    styles.cardActionsRight = {
+      display: 'flex',
+      justifyContent: 'flex-end',
+      alignItems: 'center',
+    };
+
+    styles.commentIcon = {
+      marginLeft: 20,
+    };
+
     styles.chipsWrapper = {
       display: 'flex',
       flexDirection: 'row-reverse',
@@ -112,7 +216,6 @@ class Main extends Component {
       right: 25,
       bottom: 25
     };
-
 
     styles.postBody = {
       textOverflow: 'ellipsis',
@@ -145,18 +248,45 @@ class Main extends Component {
             <ToolbarSeparator/>
             <IconMenu
               iconButtonElement={
-                <IconButton touch={true}>
+                <IconButton>
                   <SortIcon/>
                 </IconButton>
               }
+              value={this.state.sortBy}
+              open={this.state.sortMenuOpen}
+              onChange={this.sortChanged}
+              onRequestChange={this.onSortMenuRequestChange}
+              onItemTouchTap={this.sortItemSelectedAgain}
             >
-              <MenuItem primaryText="Download"/>
-              <MenuItem primaryText="More Info"/>
+              <MenuItem
+                primaryText={sortTarget.Default}
+                value={sortTarget.Default}
+              />
+              <Divider/>
+              <MenuItem
+                primaryText={sortTarget.PostedAt}
+                value={sortTarget.PostedAt}
+                rightIcon={this.getArrow(sortTarget.PostedAt)}
+              />
+              <MenuItem
+                primaryText={sortTarget.Title}
+                value={sortTarget.Title}
+                rightIcon={this.getArrow(sortTarget.Title)}
+              />
+              <MenuItem
+                primaryText={sortTarget.Author}
+                value={sortTarget.Author}
+                rightIcon={this.getArrow(sortTarget.Author)}
+              />
+              <MenuItem
+                primaryText={sortTarget.Category}
+                value={sortTarget.Category}
+                rightIcon={this.getArrow(sortTarget.Category)}
+              />
             </IconMenu>
-            <span>
-                Sort List
-              </span>
-
+            <span onClick={this.openSortMenu} style={styles.sortMenuTitle}>
+               Sort List
+            </span>
           </ToolbarGroup>
         </Toolbar>
       </Paper>
@@ -185,7 +315,7 @@ class Main extends Component {
 
         <GridList
           cols={1}
-          cellHeight={250}
+          cellHeight={150}
           padding={10}
           style={styles.gridList}
         >
@@ -205,7 +335,7 @@ class Main extends Component {
                         size={30}
                         style={styles.avatar}
                       >
-                        A
+                        {post.ranking}
                       </Avatar>
                       <div>
                         {post.title}
@@ -217,22 +347,30 @@ class Main extends Component {
                   subtitleColor="#ccc"
                   style={styles.cardHeader}
                 />
-
-                <CardActions>
-                  <Badge
-                    badgeContent={4}
-                    primary={true}
-                    badgeStyle={{top: 12, right: 12}}
-                  >
-                    <IconButton tooltip="Vote">
-                      <ThumbUpIcon/>
+                <CardActions style={styles.cardActions}>
+                  <div style={styles.cardActionsLeft}>
+                    <IconButton onClick={() => this.vote(post.id, true)}>
+                      <ThumbUpIcon
+                        color={green500}
+                      />
                     </IconButton>
-                  </Badge>
-                  <Chip
-                    style={styles.chipStyle}
-                  >
-                    {post.category}
-                  </Chip>
+                    <div>{post.voteScore}</div>
+                    <IconButton onClick={() => this.vote(post.id, false)}>
+                      <ThumbDownIcon color={red500}/>
+                    </IconButton>
+                    <IconButton
+                      style={styles.commentIcon}
+                    >
+                      <CommentIcon color={orange500}/>
+                    </IconButton>
+                    <div>{post.commentCount}</div>
+                  </div>
+                  <div style={styles.cardActionsRight}>
+                    <RaisedButton
+                      label="Show"
+                      primary={true}
+                    />
+                  </div>
                 </CardActions>
               </Card>
             </GridTile>
@@ -260,10 +398,20 @@ Main.contextTypes = {
 const mapStateToProps = (state) => {
   let posts = [];
   if (state.post.posts && state.post.posts.length > 0) {
-    posts = state.post.posts.map((post) => {
+    posts = state.post.posts;
+    posts.sort((a, b) => {
+      if (a.voteScore > b.voteScore) {
+        return -1;
+      } else if (a.voteScore < b.voteScore) {
+        return 1;
+      } else {
+        return 0;
+      }
+    });
+    posts.map((post, index) => {
+      post.ranking = index + 1;
       post.subTitle = post.title.toLowerCase();
     });
-    posts = state.post.posts.sort(sortBy('subTitle'));
   }
   return {
     user: state.session.user,
@@ -273,7 +421,7 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-  actions: bindActionCreators({loadPosts, postsLoaded}, dispatch)
+  actions: bindActionCreators({loadPosts, postsLoaded, voteForPost}, dispatch)
 });
 
 export default connect(

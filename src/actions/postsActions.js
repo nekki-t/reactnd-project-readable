@@ -1,6 +1,13 @@
 import {
-  START_LOAD_POSTS, POSTS_LOADED, POSTS_LOAD_FAILED, POST_CREATING, POST_CREATED, POST_CREATE_FAILED,
-  NEW_POST
+  START_LOAD_POSTS,
+  POSTS_LOADED,
+  POSTS_LOAD_FAILED,
+  POST_CREATING,
+  POST_CREATED,
+  POST_CREATE_FAILED,
+  NEW_POST,
+  POST_VOTING,
+  POST_VOTE_FAILED,
 } from './actionTypes';
 import readableApi from '../api/readableApi';
 
@@ -47,6 +54,18 @@ export const postCreateFailed = (errorMessage) => ({
   errorMessage,
 });
 
+export const postVoting = () => ({
+  type: POST_VOTING,
+  loading: true,
+});
+
+export const postVoteFailed = (errorMessage) => ({
+  type: POST_VOTE_FAILED,
+  loading: false,
+  voteFailed: true,
+  errorMessage,
+});
+
 export const loadPosts = () => {
   return dispatch => {
     dispatch(startPostsLoading());
@@ -57,7 +76,7 @@ export const loadPosts = () => {
         }
       )
       .catch(error => {
-        throw(error);
+        postsLoadFailed(error);
       });
   };
 };
@@ -71,8 +90,22 @@ export const post = (post) => {
           dispatch(postCreated());
         }
       ).catch(error => {
-        throw(error);
+        postCreateFailed(error);
       })
 
+  }
+};
+
+export const voteForPost = (id, voteString) => {
+  return dispatch => {
+    dispatch(postVoting());
+    return readableApi.voteForPost(id, voteString)
+      .then(
+        response => {
+          dispatch(loadPosts());
+        }
+      ).catch(error => {
+        postVoteFailed(error);
+      })
   }
 };

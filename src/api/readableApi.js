@@ -26,6 +26,14 @@ class ReadableApi {
       API.headers
     )
   }
+
+  static voteForPost(id, option) {
+    return axios.post(
+      API.post_vote.replace(API.params.id, id),
+      {option},
+      API.headers,
+    )
+  }
 }
 
 export default ReadableApi;

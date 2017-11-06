@@ -4,12 +4,17 @@ export const API = {
   categories: `${API_URL}/categories`,
   category_posts: `${API_URL}/:category/posts`,
   posts: `${API_URL}/posts`,
+  post_vote: `${API_URL}/posts/:id`,
   comments: `${API_URL}/comments`,
   params: {
     category: ':category',
     posts: ':posts',
     id: ':id',
   },
+  vote: {
+    upVote: 'upVote',
+    downVote: 'downVote',
+  }
 };
 
 export const URL = {
