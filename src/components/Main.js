@@ -29,6 +29,7 @@ import ArrowDownward from 'material-ui/svg-icons/navigation/arrow-downward';
 import RaisedButton from 'material-ui/RaisedButton';
 import Divider from 'material-ui/Divider';
 /*--- Libraries ---*/
+import sortBy from 'sort-by';
 /*--- Shared ---*/
 import { API, URL } from '../shared/constants';
 import utilities from '../shared/utilities';
@@ -37,12 +38,29 @@ import Loading from './Loading';
 
 
 const sortTarget = {
-  Default: 'Default (Ranking)',
-  PostedAt: 'Posted at',
-  Title: 'Title',
-  Author: 'Author',
-  Category: 'Category',
-  ClearSort: 'Clear Sort',
+  Default: {
+    displayName: 'Default (Ranking)',
+  },
+  PostedAt: {
+    displayName: 'Posted at',
+    sortName: 'timestamp',
+  },
+  Title: {
+    displayName: 'Title',
+    sortName: 'sortTitle',
+  },
+  Author: {
+    displayName: 'Author',
+    sortName: 'sortAuthor',
+  },
+  Category: {
+    displayName: 'Category',
+    sortName: 'sortCategory',
+  },
+  CommentCount: {
+    displayName: 'Comment Count',
+    sortName: 'commentCount'
+  },
 };
 
 class Main extends Component {
@@ -59,7 +77,7 @@ class Main extends Component {
       sortMenuOpen: false,
       posts: [],
       orgPosts: [],
-      sortBy: sortTarget.Default,
+      sortBy: sortTarget.Default.displayName,
       sortAsc: true,
     }
   }
@@ -70,7 +88,6 @@ class Main extends Component {
       console.log(nextProps.posts);
       this.setState({
         posts: Object.assign([], nextProps.posts),
-        orgPosts: Object.assign([], nextProps.posts),
       })
     }
   }
@@ -104,19 +121,58 @@ class Main extends Component {
   };
 
   sortChanged = (event, value) => {
+
+  };
+
+  sortPosts = (org, target, asc) => {
+    if(asc) {
+      org.sort(sortBy(target));
+    } else {
+      org.sort(sortBy(`-${target}`));
+    }
+  };
+
+  sortItemSelectedAgain = (event) => {
     let asc = true;
+    const value = event.target.textContent;
     if (value === this.state.sortBy) {
       asc = !this.state.sortAsc;
+    } else if (
+      value === sortTarget.CommentCount.displayName ||
+        value === sortTarget.PostedAt.displayName
+    ) {
+      asc = false; // it is better to be desc for these as default.
+    }
+
+    let sortedPosts = Object.assign([], this.state.posts);
+    switch (value) {
+      case sortTarget.PostedAt.displayName:
+        this.sortPosts(sortedPosts, sortTarget.PostedAt.sortName, asc);
+        break;
+      case sortTarget.Title.displayName:
+        this.sortPosts(sortedPosts, sortTarget.Title.sortName, asc);
+        break;
+      case sortTarget.Author.displayName:
+        this.sortPosts(sortedPosts, sortTarget.Author.sortName, asc);
+        break;
+      case sortTarget.Category.displayName:
+        this.sortPosts(sortedPosts, sortTarget.Category.sortName, asc);
+        break;
+      case sortTarget.CommentCount.displayName:
+        this.sortPosts(sortedPosts, sortTarget.CommentCount.sortName, asc);
+        break;
+      default:
+        sortedPosts = Object.assign([], this.props.posts);
     }
 
     this.setState({
       sortBy: value,
       sortAsc: asc,
+      posts: sortedPosts,
     });
-  };
 
-  sortItemSelectedAgain = (event, value) => {
-    console.log(event, value);
+
+    // posts = state.post.posts.sort(sortBy('-voteCount'));
 
   };
 
@@ -124,12 +180,12 @@ class Main extends Component {
     if (value === this.state.sortBy) {
       if (this.state.sortAsc) {
         return (
-          < ArrowUpward />
+          < ArrowUpward/>
         )
 
       } else {
         return (
-          < ArrowDownward />
+          < ArrowDownward/>
         )
       }
     } else {
@@ -259,30 +315,19 @@ class Main extends Component {
               onItemTouchTap={this.sortItemSelectedAgain}
             >
               <MenuItem
-                primaryText={sortTarget.Default}
-                value={sortTarget.Default}
+                primaryText={sortTarget.Default.displayName}
+                value={sortTarget.Default.displayName}
               />
               <Divider/>
-              <MenuItem
-                primaryText={sortTarget.PostedAt}
-                value={sortTarget.PostedAt}
-                rightIcon={this.getArrow(sortTarget.PostedAt)}
-              />
-              <MenuItem
-                primaryText={sortTarget.Title}
-                value={sortTarget.Title}
-                rightIcon={this.getArrow(sortTarget.Title)}
-              />
-              <MenuItem
-                primaryText={sortTarget.Author}
-                value={sortTarget.Author}
-                rightIcon={this.getArrow(sortTarget.Author)}
-              />
-              <MenuItem
-                primaryText={sortTarget.Category}
-                value={sortTarget.Category}
-                rightIcon={this.getArrow(sortTarget.Category)}
-              />
+              {Object.keys(sortTarget).map((key) =>
+                sortTarget[key].sortName &&
+                  <MenuItem
+                    key={key}
+                    primaryText={sortTarget[key].displayName}
+                    value={sortTarget[key].displayName}
+                    rightIcon={this.getArrow(sortTarget[key].displayName)}
+                  />
+              )}
             </IconMenu>
             <span onClick={this.openSortMenu} style={styles.sortMenuTitle}>
                Sort List
@@ -408,10 +453,14 @@ const mapStateToProps = (state) => {
         return 0;
       }
     });
+
     posts.map((post, index) => {
       post.ranking = index + 1;
-      post.subTitle = post.title.toLowerCase();
+      post.sortTitle = post.title.toLowerCase();
+      post.sortAuthor = post.author.toLowerCase();
+      post.sortCategory = post.category.toLowerCase();
     });
+
   }
   return {
     user: state.session.user,
