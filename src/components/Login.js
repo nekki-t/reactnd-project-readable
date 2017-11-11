@@ -117,7 +117,7 @@ class Login extends Component {
           <div>
             Please input your username and password to <span style={styles.loginColor}>LOGIN</span>.
             <div style={styles.linkToTheOther}>
-              Or <a onClick={(e) => this.changeMode(e, false)} href="#">Create User Account</a>
+              Or <a onClick={(e) => this.changeMode(e, false)} href="">Create User Account</a>
             </div>
           </div>
         )
@@ -126,7 +126,7 @@ class Login extends Component {
           <div>
             Please input your username and password and push <span style={styles.createColor}>CREATE</span>.
             <div style={styles.linkToTheOther}>
-              Or <a onClick={(e) => this.changeMode(e, true)} href="#">Login</a>
+              Or <a onClick={(e) => this.changeMode(e, true)} href="">Login</a>
             </div>
           </div>
         );

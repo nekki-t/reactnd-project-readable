@@ -13,26 +13,77 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { loadCategories, categoriesLoaded } from '../actions/categoriesAction';
 
+/*--- Shared ---*/
+import { URL } from '../shared/constants';
+
+const ROOT_CATEGORY = 'All';
 
 class SideBar extends Component {
+  constructor() {
+    super();
+    this.state = {
+      selectedCategory: ''
+    };
+    this.applyFilter = this.applyFilter.bind(this);
+    this.linkColor = this.linkColor.bind(this);
+  }
 
   componentWillMount() {
-    if(this.props.author) {
+    const pathname = this.context.router.route.location.pathname;
+    if (pathname.indexOf('/posts/') > -1){
+      const category = pathname.replace('/posts/', '');
+      this.setState({
+        selectedCategory: category
+      });
+    } else {
+      this.setState({
+        selectedCategory: ROOT_CATEGORY
+      });
+    }
+
+    if (this.props.author) {
       this.props.actions.loadCategories();
     }
   }
 
-  render () {
+  applyFilter = (filterText) => {
+    this.setState({
+      selectedCategory: filterText
+    });
+    if(filterText === ROOT_CATEGORY) {
+      this.context.router.history.push(URL.ROOT);
+    } else {
+      this.context.router.history.push(URL.CATEGORY.replace(':category', filterText));
+    }
+    this.props.onClose();
+  };
+
+  linkColor = (category) => {
+    const selectedStyle = {
+      color: '#ff4d9a',
+    };
+    const defaultStyle = {
+      color: '#51ff3a',
+    };
+    if(this.state.selectedCategory === category) {
+      return selectedStyle;
+    } else {
+      return defaultStyle;
+    }
+  };
+
+  render() {
     const styles = {};
     styles.drawer = {
       backgroundColor: 'rgba(24, 26, 27, 0.5)',
       appBar: {
         backgroundColor: '#FF4081',
       },
-      menuItem: {
-        color: '#51ff3a',
-      },
+      title: {
+        cursor: 'pointer',
+      }
     };
+
     return (
       <Drawer
         docked={false}
@@ -41,14 +92,31 @@ class SideBar extends Component {
         containerStyle={styles.drawer}
       >
         <AppBar
-          title="Categories"
+          title={
+            <span style={styles.drawer.title}>Categories</span>
+          }
           style={styles.drawer.appBar}
           iconElementLeft={
             <IconButton><ForumIcon/></IconButton>
           }
+          onLeftIconButtonTouchTap={() => this.props.onClose()}
+          onTitleTouchTap={() => this.props.onClose()}
         />
+        <MenuItem
+          style={this.linkColor(ROOT_CATEGORY)}
+          onClick={() => this.applyFilter(ROOT_CATEGORY)}
+        >
+          {ROOT_CATEGORY}
+        </MenuItem>
+
         {this.props.categories && this.props.categories.map((cat, index) =>
-          <MenuItem key={index} style={styles.drawer.menuItem}>{cat.name}</MenuItem>
+          <MenuItem
+            key={index}
+            style={this.linkColor(cat.name)}
+            onClick={() => this.applyFilter(cat.name)}
+          >
+            {cat.name}
+          </MenuItem>
         )}
       </Drawer>
     )
@@ -62,6 +130,7 @@ SideBar.contextTypes = {
 SideBar.propTypes = {
   opened: PropTypes.bool.isRequired,
   requestChange: PropTypes.func.isRequired,
+  onClose: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({

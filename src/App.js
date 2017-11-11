@@ -5,7 +5,7 @@ import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
 /*--- Redux ---*/
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { loadPosts } from './actions/postsActions';
+import { loadPosts } from './actions/postsAction';
 import { logout } from './actions/sessionAction';
 /*--- CSS ---*/
 import './App.css';
@@ -19,6 +19,7 @@ import SideBar from './components/SideBar';
 import Main from './components/Main';
 import Login from './components/Login';
 import Post from './components/Post';
+import Details from './components/Details';
 
 class App extends Component {
   constructor(props, context) {
@@ -62,7 +63,7 @@ class App extends Component {
     const appbarTitle = (
       <span
         style={styles.title}
-        onClick={this.titleClick}>
+        onClick={this.toggleCategoryBar}>
               Readable
       </span>
     );
@@ -77,7 +78,7 @@ class App extends Component {
     );
 
     return (
-      <div className="base">
+      <div>
         <AppBar
           title={appbarTitle}
           style={styles.appBar}
@@ -88,6 +89,7 @@ class App extends Component {
           <SideBar
             opened={this.state.categoryBarOpened}
             requestChange={this.toggleCategoryBar}
+            onClose={this.toggleCategoryBar}
           />
           <div style={styles.main}>
 
@@ -100,7 +102,9 @@ class App extends Component {
             >
               <Switch location={location} key={location.key}>
                 <Route exact={true} path={URL.ROOT} component={Main}/>
+                <Route path={URL.CATEGORY} component={Main}/>
                 <Route path={URL.LOGIN} component={Login}/>
+                <Route path={URL.POST} component={Details}/>
                 <Route path={URL.NEW_POST} component={Post}/>
               </Switch>
             </ReactCSSTransitionGroup>

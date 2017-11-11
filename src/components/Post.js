@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 /*--- Redux ---*/
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { post, initializePost } from '../actions/postsActions';
+import { post, initializePost } from '../actions/postsAction';
 /*--- Material UI ---*/
 import { Card, CardActions, CardText, CardTitle } from 'material-ui';
 import RaisedButton from 'material-ui/RaisedButton';
@@ -145,7 +145,6 @@ class Post extends Component {
       marginLeft: 10
     };
 
-
     const actions = (
       <div>
         <RaisedButton
@@ -214,7 +213,7 @@ class Post extends Component {
               </SelectField>
               <TextField
                 id="title"
-                hintText="input the title within 50 characters."
+                hintText={`input the title within ${LIMITATION.title} characters.`}
                 floatingLabelText="Title"
                 floatingLabelFixed={true}
                 fullWidth={true}
@@ -224,7 +223,7 @@ class Post extends Component {
               />
               <TextField
                 id="body"
-                hintText="input the body within 500 characters."
+                hintText={`input the body within ${LIMITATION.body} characters.`}
                 floatingLabelText="Body"
                 floatingLabelFixed={true}
                 fullWidth={true}

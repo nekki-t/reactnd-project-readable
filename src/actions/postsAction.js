@@ -6,6 +6,9 @@ import {
   POST_CREATED,
   POST_CREATE_FAILED,
   NEW_POST,
+  POST_DETAILS_LOADING,
+  POST_DETAILS_LOADED,
+  POST_DETAILS_LOAD_FAILED,
   POST_VOTING,
   POST_VOTE_FAILED,
 } from './actionTypes';
@@ -54,6 +57,23 @@ export const postCreateFailed = (errorMessage) => ({
   errorMessage,
 });
 
+export const postDetailsLoading = () => ({
+  type: POST_DETAILS_LOADING,
+  loading: true,
+});
+
+export const postDetailsLoaded = (post) => ({
+  type: POST_DETAILS_LOADED,
+  loading: false,
+  post,
+});
+
+export const postDetailsLoadFailed = (errorMessage) => ({
+  type: POST_DETAILS_LOAD_FAILED,
+  loading: false,
+  errorMessage,
+});
+
 export const postVoting = () => ({
   type: POST_VOTING,
   loading: true,
@@ -81,6 +101,21 @@ export const loadPosts = () => {
   };
 };
 
+export const loadPost = (id) => {
+  return dispatch => {
+    dispatch(postDetailsLoading());
+    return readableApi.getPost(id)
+      .then(
+        response => {
+          dispatch(postDetailsLoaded(response.data));
+        }
+      )
+      .catch(error => {
+        postDetailsLoadFailed(error);
+      })
+  }
+};
+
 export const post = (post) => {
   return dispatch => {
     dispatch(startPosting());
@@ -92,7 +127,6 @@ export const post = (post) => {
       ).catch(error => {
         postCreateFailed(error);
       })
-
   }
 };
 
@@ -103,6 +137,7 @@ export const voteForPost = (id, voteString) => {
       .then(
         response => {
           dispatch(loadPosts());
+          dispatch(loadPost(id));
         }
       ).catch(error => {
         postVoteFailed(error);

@@ -4,8 +4,10 @@ export const API = {
   categories: `${API_URL}/categories`,
   category_posts: `${API_URL}/:category/posts`,
   posts: `${API_URL}/posts`,
+  post: `${API_URL}/posts/:id`,
   post_vote: `${API_URL}/posts/:id`,
-  comments: `${API_URL}/comments`,
+  comments: `${API_URL}/posts/:id/comments`,
+  comment_vote: `${API_URL}/comments/:id`,
   params: {
     category: ':category',
     posts: ':posts',
@@ -20,13 +22,15 @@ export const API = {
 export const URL = {
   LOGIN: '/login',
   ROOT: '/',
-  POST: '/post/:post',
-  NEW_POST: '/post'
+  CATEGORY: '/posts/:category',
+  POST: '/post/:id',
+  NEW_POST: '/post',
 };
 
 export const LIMITATION = {
-  title: 50,
+  title: 100,
   body: 500,
+  comment: 200,
 };
 
 export const POST_ATTR = {

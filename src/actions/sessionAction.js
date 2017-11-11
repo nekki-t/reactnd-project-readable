@@ -1,9 +1,6 @@
 import {
-  SESSION_LOAD,
   SESSION_ACCESSING,
   SESSION_START,
-  SESSION_LOGOUT,
-  SESSION_TERMINATED,
   SESSION_NOT_STARTED,
   SESSION_USER_CREATED,
   SESSION_USER_NOT_CREATED,
@@ -12,7 +9,6 @@ import {
 import sessionApi from '../api/sessionApi';
 
 import { loadCategories } from './categoriesAction';
-import { loadPosts } from './postsActions';
 
 import { URL } from '../shared/constants';
 

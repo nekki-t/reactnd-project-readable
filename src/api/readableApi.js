@@ -1,6 +1,5 @@
 import { API } from '../shared/constants';
 import axios from 'axios';
-import { POST_ATTR } from '../shared/constants';
 
 class ReadableApi {
 
@@ -11,6 +10,7 @@ class ReadableApi {
       API.headers,
     )
   }
+
   /* === < Posts > =================================================================== */
   static fetchPosts() {
     return axios.get(
@@ -27,9 +27,32 @@ class ReadableApi {
     )
   }
 
+  static getPost(id) {
+    return axios.get(
+      API.post.replace(API.params.id, id),
+      API.headers,
+    )
+  }
+
   static voteForPost(id, option) {
     return axios.post(
       API.post_vote.replace(API.params.id, id),
+      {option},
+      API.headers,
+    )
+  }
+
+  /* === < Comments > =================================================================== */
+  static fetchComments(postId) {
+    return axios.get(
+      API.comments.replace(API.params.id, postId),
+      API.headers,
+    )
+  }
+
+  static voteForComment(id, option) {
+    return axios.post(
+      API.comment_vote.replace(API.params.id, id),
       {option},
       API.headers,
     )
