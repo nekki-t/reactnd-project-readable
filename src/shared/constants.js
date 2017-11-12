@@ -7,6 +7,8 @@ export const API = {
   post: `${API_URL}/posts/:id`,
   post_vote: `${API_URL}/posts/:id`,
   comments: `${API_URL}/posts/:id/comments`,
+  createComment: `${API_URL}/comments`,
+  updateComment: `${API_URL}/comments/:id`,
   comment_vote: `${API_URL}/comments/:id`,
   params: {
     category: ':category',
@@ -28,6 +30,7 @@ export const URL = {
 };
 
 export const LIMITATION = {
+  author: 20,
   title: 100,
   body: 500,
   comment: 200,

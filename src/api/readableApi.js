@@ -50,6 +50,22 @@ class ReadableApi {
     )
   }
 
+  static createComment(comment) {
+    return axios.post(
+      API.createComment,
+      comment,
+      API.headers,
+    )
+  }
+
+  static updateComment(id, params) {
+    return axios.put(
+      API.updateComment.replace(API.params.id, id),
+      params,
+      API.headers,
+    )
+  }
+
   static voteForComment(id, option) {
     return axios.post(
       API.comment_vote.replace(API.params.id, id),

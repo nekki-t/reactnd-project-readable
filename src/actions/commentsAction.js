@@ -9,6 +9,7 @@ import {
   COMMENT_DELETED,
   COMMENT_VOTING,
   COMMENT_VOTED,
+
 } from './actionTypes';
 
 import readableApi from '../api/readableApi';
@@ -34,6 +35,45 @@ export const loadComments = (postId) => {
   }
 };
 
+export const createComment = (comment) => {
+  return dispatch => {
+    dispatch({
+      type: COMMENT_CREATING,
+      loading: true,
+    });
+    return readableApi.createComment(comment)
+      .then(
+        response => {
+          dispatch({
+            type: COMMENT_CREATED,
+            commentCreated: true,
+          });
+          dispatch(loadComments(comment.parentId));
+          dispatch(loadPost(comment.parentId));
+        }
+      )
+  }
+};
+
+export const updateComment = (parentId, id, params) => {
+  return dispatch => {
+    dispatch({
+      type: COMMENT_UPDATING,
+      loading: true,
+    });
+    return readableApi.updateComment(id, params)
+      .then(
+        response => {
+          dispatch({
+            type: COMMENT_UPDATED,
+          });
+          dispatch(loadComments(parentId));
+          dispatch(loadPost(parentId))
+        }
+      );
+  }
+};
+
 export const voteForComment = (postId, id, voteString) => {
   return dispatch => {
     dispatch({
@@ -46,8 +86,6 @@ export const voteForComment = (postId, id, voteString) => {
           dispatch(loadComments(postId));
           dispatch(loadPost(postId));
         }
-      ).catch(error => {
-        throw error;
-      })
+      );
   };
 };

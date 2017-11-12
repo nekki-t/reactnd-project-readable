@@ -4,12 +4,12 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { loadPost, loadPosts, voteForPost } from '../actions/postsAction';
-import { loadComments, voteForComment } from '../actions/commentsAction';
+import { createComment, loadComments, voteForComment, updateComment } from '../actions/commentsAction';
 /*--- Material UI ---*/
-import { Card, CardText, CardHeader, CardActions } from 'material-ui/Card';
+import { Card, CardActions, CardHeader, CardText } from 'material-ui/Card';
 import Paper from 'material-ui/Paper';
 import CommentIcon from 'material-ui/svg-icons/communication/comment';
-import { orange500, green500, red500, indigo500, redA700 } from 'material-ui/styles/colors';
+import { green500, indigo500, orange500, red500, redA700 } from 'material-ui/styles/colors';
 import RaisedButton from 'material-ui/RaisedButton';
 import Divider from 'material-ui/Divider';
 import IconButton from 'material-ui/IconButton';
@@ -18,16 +18,15 @@ import ThumbDownIcon from 'material-ui/svg-icons/action/thumb-down';
 import DeleteIcon from 'material-ui/svg-icons/action/delete';
 import EditIcon from 'material-ui/svg-icons/image/edit';
 import Dialog from 'material-ui/Dialog';
-import TextField from 'material-ui/TextField';
-
 /*--- Children ---*/
 import PostTitle from './PostTitle';
 import PostActions from './PostActions';
+import Comment from './Comment';
 /*--- Shared ---*/
 import { API, LIMITATION } from '../shared/constants';
 import utilities from '../shared/utilities';
 
-import { ToastContainer, toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.css';
 
 class Details extends Component {
@@ -38,15 +37,25 @@ class Details extends Component {
     this.deleteComment = this.deleteComment.bind(this);
     this.openAddCommentDialog = this.openAddCommentDialog.bind(this);
     this.openDeleteCommentDialog = this.openDeleteCommentDialog.bind(this);
-    this.inputComment = this.inputComment.bind(this);
+    this.closeAddCommentDialog = this.closeAddCommentDialog.bind(this);
+    this.openEditCommentDialog = this.openEditCommentDialog.bind(this);
+    this.closeEditCommentDialog = this.closeEditCommentDialog.bind(this);
+    this.closeDeleteCommentDialog = this.closeDeleteCommentDialog.bind(this);
+    this.textInput = this.textInput.bind(this);
     this.addComment = this.addComment.bind(this);
+    this.updateComment = this.updateComment.bind(this);
+
     this.state = {
+      comments: '',
       commentsShown: false,
       addCommentDialogOpen: false,
-      selectedComment: null,
+      editCommentDialogOpen: false,
       deleteCommentDialogOpen: false,
-      newComment: '',
-      newCommentError: '',
+      selectedComment: null,
+      commentText: '',
+      commentError: '',
+      author: '',
+      authorError: '',
     }
   }
 
@@ -77,23 +86,140 @@ class Details extends Component {
   };
 
   getCommentLayoutStyle = (index) => {
-    let style = {
-      display: 'flex',
-    };
-
-    if (!index % 2 === 0) {
-      style = {
-        ...style,
+    if (!(index % 2 === 0)) {
+      return {
+        display: 'flex',
         justifyContent: 'flex-end'
       }
+    } else {
+      return {
+        display: 'flex',
+        justifyContent: 'flex-start'
+      }
     }
-    return style;
   };
 
+  /*--- add comment ---*/
   openAddCommentDialog = () => {
     this.setState({
       addCommentDialogOpen: true
     });
+  };
+
+  closeAddCommentDialog = () => {
+    this.setState({
+      commentText: '',
+      commentError: '',
+      author: '',
+      authorError: '',
+      addCommentDialogOpen: false
+    });
+  };
+
+  textInput = (targetId, value) => {
+    this.setState({
+      [targetId]: value
+    });
+  };
+
+  validateComment = (isNew, author, comment) => {
+    let submittable = true;
+
+    if (isNew) {
+      if (author === '') {
+        this.setState({
+          authorError: 'Please input author name.'
+        });
+        submittable = false;
+      } else if (author.length > LIMITATION.author) {
+        this.setState({
+          authorError: `Please input author name within ${LIMITATION.author} characters`
+        });
+        submittable = false;
+      }
+    } else {
+      if (this.state.selectedComment.body === comment) {
+        this.setState({
+          commentError: 'Nothing has been changed.'
+        });
+        submittable = false;
+      }
+    }
+
+    if (comment === '') {
+      this.setState({
+        commentError: 'Please input comment.'
+      });
+      submittable = false;
+    } else if (comment.length > LIMITATION.comment) {
+      this.setState({
+        commentError: `Please input comment within ${LIMITATION.comment} characters.`
+      });
+      submittable = false;
+    }
+
+    return submittable;
+  };
+
+  addComment = () => {
+
+    let authorName = this.state.author.trim();
+    let newComment = this.state.commentText.trim();
+
+    if (this.validateComment(true, authorName, newComment)) {
+      const comment = {};
+      comment.id = Date.now();
+      comment.timestamp = Date.now();
+      comment.parentId = this.props.post.id;
+      comment.body = newComment;
+      comment.author = authorName;
+
+      this.props.actions.createComment(comment);
+      this.closeAddCommentDialog();
+    }
+  };
+
+  /*--- edit comment ---*/
+  openEditCommentDialog = (comment) => {
+    this.setState({
+      selectedComment: comment,
+      commentText: comment.body,
+      author: comment.author,
+      editCommentDialogOpen: true,
+    });
+  };
+
+  closeEditCommentDialog = () => {
+    this.setState({
+      commentText: '',
+      commentError: '',
+      author: '',
+      authorError: '',
+      editCommentDialogOpen: false
+    });
+  };
+
+  updateComment = () => {
+    let updateComment = this.state.commentText.trim();
+
+    if (this.validateComment(false, null, updateComment)) {
+      const params = {
+        timestamp: Date.now(),
+        body: updateComment,
+      };
+
+      this.props.actions.updateComment(
+        this.state.selectedComment.parentId,
+        this.state.selectedComment.id,
+        params);
+      this.closeEditCommentDialog();
+    }
+  };
+
+
+  /*--- delete  comment---*/
+  deleteComment = (parentId, id) => {
+
   };
 
   openDeleteCommentDialog = (comment) => {
@@ -103,21 +229,11 @@ class Details extends Component {
     });
   };
 
-  deleteComment = (parentId, id) => {
-    toast('test', {
-      type: toast.TYPE.SUCCESS,
-      position: toast.POSITION.TOP_RIGHT,
-    });
-  };
-
-  inputComment = (value) => {
+  closeDeleteCommentDialog = () => {
     this.setState({
-      newComment: value.trim()
-    });
-  };
-
-  addComment = () => {
-
+      selectedComment: null,
+      deleteCommentDialogOpen: false,
+    })
   };
 
   render() {
@@ -216,7 +332,7 @@ class Details extends Component {
       width: 50
     };
 
-    styles.deleteCommentButton = {
+    styles.actionButton = {
       marginLeft: 20,
     };
 
@@ -318,6 +434,7 @@ class Details extends Component {
                       <IconButton
                         iconStyle={styles.commentIconSize}
                         style={styles.commentIconButtonSize}
+                        onClick={() => this.openEditCommentDialog(comment)}
                       >
                         <EditIcon
                           color={indigo500}
@@ -348,13 +465,13 @@ class Details extends Component {
               [
                 <RaisedButton
                   label="Cancel"
-                  onClick={() => this.setState({deleteCommentDialogOpen: false})}
+                  onClick={() => this.closeDeleteCommentDialog()}
                 />,
                 <RaisedButton
                   label="Delete"
                   secondary={true}
                   onClick={() => this.deleteComment(this.state.selectedComment)}
-                  style={styles.deleteCommentButton}
+                  style={styles.actionButton}
                 />,
               ]
             }
@@ -366,45 +483,28 @@ class Details extends Component {
         </div>
 
         <div>
-          <Dialog
-            title="Add Comment"
-            actions={
-              [
-                <RaisedButton
-                  label="Cancel"
-                  onClick={() => this.setState({addCommentDialogOpen: false})}
-                />,
-                <RaisedButton
-                  label="Add"
-                  secondary={true}
-                  onClick={() => this.addComment(this.state.newComment)}
-                  style={styles.deleteCommentButton}
-                />,
-              ]
-            }
-            modal={true}
+          <Comment
+            isNew={true}
+            onCancel={this.closeAddCommentDialog}
+            onExecute={this.addComment}
+            onTextChange={this.textInput}
+            comment={this.state.commentText}
+            author={this.state.author}
+            commentError={this.state.commentError}
+            authorError={this.state.authorError}
             open={this.state.addCommentDialogOpen}
-          >
-            <Card
-              style={{backgroundColor: '#f9f9f9'}}
-            >
-              <CardText
-              >
-                <TextField
-                  id="comment"
-                  hintText={`input the comment within ${LIMITATION.comment} characters.`}
-                  floatingLabelText="Comment"
-                  floatingLabelFixed={true}
-                  fullWidth={true}
-                  value={this.state.newComment}
-                  multiLine={true}
-                  rows={5}
-                  errorText={this.state.newCommentError}
-                  onChange={(e) => this.inputComment(e.target.value)}
-                />
-              </CardText>
-            </Card>
-          </Dialog>
+          />
+          <Comment
+            isNew={false}
+            onCancel={this.closeEditCommentDialog}
+            onExecute={this.updateComment}
+            onTextChange={this.textInput}
+            comment={this.state.commentText}
+            author={this.state.author}
+            commentError={this.state.commentError}
+            authorError={this.state.authorError}
+            open={this.state.editCommentDialogOpen}
+          />
         </div>
       </div>
     );
@@ -426,18 +526,26 @@ const mapStateToProps = (state) => {
       currentPost.ranking = target.ranking;
     }
   }
+  const comments = utilities.sortCommentsByRanking(state.comment.comments);
   return {
     user: state.session.user,
     loading: state.post.loading,
-    post: state.post.post,
+    post: currentPost,
     posts: posts,
-    comments: state.comment.comments,
+    comments: comments,
+    commentCreated: state.comment.commentCreated,
   }
 };
 const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(
     {
-      loadPost, loadPosts, voteForPost, loadComments, voteForComment
+      loadPost,
+      loadPosts,
+      voteForPost,
+      loadComments,
+      voteForComment,
+      createComment,
+      updateComment,
     }, dispatch)
 });
 

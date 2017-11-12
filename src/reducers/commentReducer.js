@@ -15,6 +15,7 @@ const initialState = {
   loading: false,
   comments: [],
   comment: null,
+  commentCreated: false,
   errorMessage: '',
 };
 
@@ -22,7 +23,6 @@ export default (state = initialState, action = {}) => {
   const {
     loading,
     comments,
-    comment,
     errorMessage,
   } = action;
 
@@ -40,6 +40,21 @@ export default (state = initialState, action = {}) => {
         comments,
       };
     case COMMENT_VOTING:
+      return {
+        ...state,
+        loading,
+      };
+    case COMMENT_CREATED:
+      return {
+        ...state,
+        loading,
+      };
+    case COMMENT_UPDATING:
+      return {
+        ...state,
+        loading,
+      };
+    case COMMENT_UPDATED:
       return {
         ...state,
         loading,
