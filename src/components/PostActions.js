@@ -1,45 +1,23 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-
 /*--- Material UI ---*/
 import { CardActions } from 'material-ui/Card';
 import IconButton from 'material-ui/IconButton';
 import ThumbUpIcon from 'material-ui/svg-icons/action/thumb-up';
 import ThumbDownIcon from 'material-ui/svg-icons/action/thumb-down';
 import RaisedButton from 'material-ui/RaisedButton';
-import { green500, red500 } from 'material-ui/styles/colors';
+import { green500, red500, redA700, indigo500 } from 'material-ui/styles/colors';
+import DeleteIcon from 'material-ui/svg-icons/action/delete';
+import EditIcon from 'material-ui/svg-icons/image/edit';
 
+/*--- Styles ---*/
+import { postActionsStyles } from '../utils/styles';
 
-const PostActions = ({post, onShow, onBack, onVote }) => {
-
-
-  const styles = {};
-
-  styles.cardActions = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    padding: 0,
-  };
-
-  styles.cardActionsLeft = {
-    display: 'flex',
-    alignItems: 'center',
-  };
-
-  styles.cardActionsRight = {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-  };
-
-  styles.commentIcon = {
-    marginLeft: 20,
-  };
-
+const PostActions = ({post, onShow, onBack, onVote, onDelete, onEdit}) => {
   return (
     <div>
-      <CardActions style={styles.cardActions}>
-        <div style={styles.cardActionsLeft}>
+      <CardActions style={postActionsStyles.cardActions}>
+        <div style={postActionsStyles.cardActionsLeft}>
           <IconButton onClick={() => onVote(post.id, true)}>
             <ThumbUpIcon
               color={green500}
@@ -50,21 +28,52 @@ const PostActions = ({post, onShow, onBack, onVote }) => {
             <ThumbDownIcon color={red500}/>
           </IconButton>
         </div>
-        <div style={styles.cardActionsRight}>
-          {onShow &&
+        {onShow &&
+        <div style={postActionsStyles.cardActionsRight}>
+          <IconButton
+            iconStyle={postActionsStyles.commentIconSize}
+            style={postActionsStyles.commentIconButtonSize}
+            onClick={() => onDelete()}
+          >
+            <DeleteIcon
+              color={redA700}
+            />
+          </IconButton>
           <RaisedButton
             label="Show"
             primary={true}
-            onClick={() => onShow(post.id)}
+            onClick={() => onShow(post.id, post.category)}
           />
-          }
-          {onBack &&
+        </div>
+
+        }
+        {onBack &&
+        <div style={postActionsStyles.cardActionsRight}>
+          <IconButton
+            iconStyle={postActionsStyles.commentIconSize}
+            style={postActionsStyles.commentIconButtonSize}
+            onClick={() => onDelete()}
+          >
+            <DeleteIcon
+              color={redA700}
+            />
+          </IconButton>
+          <IconButton
+            iconStyle={postActionsStyles.commentIconSize}
+            style={postActionsStyles.commentIconButtonSize}
+            onClick={() => onEdit()}
+          >
+            <EditIcon
+              color={indigo500}
+            />
+          </IconButton>
           <RaisedButton
             label="Back"
             onClick={() => onBack()}
+            style={postActionsStyles.backButton}
           />
-          }
         </div>
+        }
       </CardActions>
     </div>
   );
@@ -75,6 +84,8 @@ PostActions.propTypes = {
   onShow: PropTypes.func,
   onBack: PropTypes.func,
   onVote: PropTypes.func.isRequired,
+  onEdit: PropTypes.func,
+  onDelete: PropTypes.func.isRequired,
 };
 
 export default PostActions;

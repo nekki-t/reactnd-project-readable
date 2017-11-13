@@ -5,6 +5,7 @@ import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
 /*--- Redux ---*/
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
+import { loadCategories } from './actions/categoriesAction';
 import { loadPosts } from './actions/postsAction';
 import { logout } from './actions/sessionAction';
 /*--- CSS ---*/
@@ -21,6 +22,9 @@ import Login from './components/Login';
 import Post from './components/Post';
 import Details from './components/Details';
 
+/*--- Styles ---*/
+import { appStyles } from './utils/styles';
+
 class App extends Component {
   constructor(props, context) {
     super(props, context);
@@ -28,6 +32,10 @@ class App extends Component {
 
     this.toggleCategoryBar = this.toggleCategoryBar.bind(this);
     this.titleClick = this.titleClick.bind(this);
+  }
+
+  componentDidMount() {
+    this.props.actions.loadCategories();
   }
 
   toggleCategoryBar() {
@@ -46,23 +54,12 @@ class App extends Component {
   };
 
   render() {
-    const styles = {};
-    styles.appBar = {
-      backgroundColor: '#3F51B5',
-    };
-    styles.title = {
-      cursor: 'pointer'
-    };
-    styles.main = {
-      width: '70%',
-      margin: '15px auto',
-    };
 
     const location = this.context.router.route.location;
 
     const appbarTitle = (
       <span
-        style={styles.title}
+        style={appStyles.title}
         onClick={this.toggleCategoryBar}>
               Readable
       </span>
@@ -81,7 +78,7 @@ class App extends Component {
       <div>
         <AppBar
           title={appbarTitle}
-          style={styles.appBar}
+          style={appStyles.appBar}
           onLeftIconButtonTouchTap={this.toggleCategoryBar}
           iconElementRight={logoutButton}
         />
@@ -91,7 +88,7 @@ class App extends Component {
             requestChange={this.toggleCategoryBar}
             onClose={this.toggleCategoryBar}
           />
-          <div style={styles.main}>
+          <div style={appStyles.main}>
 
             <ReactCSSTransitionGroup
               transitionName="transition"
@@ -104,6 +101,7 @@ class App extends Component {
                 <Route exact={true} path={URL.ROOT} component={Main}/>
                 <Route path={URL.CATEGORY} component={Main}/>
                 <Route path={URL.LOGIN} component={Login}/>
+                <Route path={URL.POST_EDIT} component={Post}/>
                 <Route path={URL.POST} component={Details}/>
                 <Route path={URL.NEW_POST} component={Post}/>
               </Switch>
@@ -125,7 +123,7 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = (dispatch) => ({
-  actions: bindActionCreators({loadPosts, logout}, dispatch)
+  actions: bindActionCreators({loadCategories, loadPosts, logout}, dispatch)
 });
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(App));

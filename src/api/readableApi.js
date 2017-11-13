@@ -42,6 +42,21 @@ class ReadableApi {
     )
   }
 
+  static updatePost(id, params) {
+    return axios.put(
+      API.updatePost.replace(API.params.id, id),
+      params,
+      API.headers
+    );
+  }
+
+  static deletePost(id) {
+    return axios.delete(
+      API.deletePost.replace(API.params.id, id),
+      API.headers,
+    )
+  }
+
   /* === < Comments > =================================================================== */
   static fetchComments(postId) {
     return axios.get(
@@ -62,6 +77,13 @@ class ReadableApi {
     return axios.put(
       API.updateComment.replace(API.params.id, id),
       params,
+      API.headers,
+    )
+  }
+
+  static deleteComment(id) {
+    return axios.delete(
+      API.deleteComment.replace(API.params.id, id),
       API.headers,
     )
   }

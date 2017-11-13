@@ -7,6 +7,7 @@ import TextField from 'material-ui/TextField';
 import RaisedButton from 'material-ui/RaisedButton';
 /*--- shared ---*/
 import { LIMITATION } from '../shared/constants';
+import { commentStyles } from '../utils/styles';
 
 const Comment = ({
                    isNew,
@@ -19,16 +20,6 @@ const Comment = ({
                    authorError,
                    open,
                  }) => {
-
-  const styles = {};
-
-  styles.editArea = {
-    backgroundColor: '#f9f9f9'
-  };
-
-  styles.actionButton = {
-    marginLeft: 20,
-  };
 
   return (
     <Dialog
@@ -43,7 +34,7 @@ const Comment = ({
             label={isNew ? 'Create' : 'Update'}
             secondary={true}
             onClick={() => onExecute()}
-            style={styles.actionButton}
+            style={commentStyles.actionButton}
           />,
         ]
       }
@@ -51,11 +42,10 @@ const Comment = ({
       open={open}
     >
       <Card
-        style={styles.editArea}
+        style={commentStyles.editArea}
       >
         <CardText
         >
-          {isNew &&
           <TextField
             id="author"
             hintText={`input author name within ${LIMITATION.author} characters.`}
@@ -65,8 +55,8 @@ const Comment = ({
             value={author}
             errorText={authorError}
             onChange={(e) => onTextChange(e.target.id, e.target.value)}
+            disabled={!isNew}
           />
-          }
 
           <TextField
             id="commentText"

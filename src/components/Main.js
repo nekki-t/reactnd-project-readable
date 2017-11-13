@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 /*--- Redux ---*/
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { loadPosts, voteForPost } from '../actions/postsAction';
+import { loadPosts, voteForPost, deletePost } from '../actions/postsAction';
 /*--- Matrial UI ---*/
 import { Card } from 'material-ui/Card';
 import Paper from 'material-ui/Paper';
@@ -20,15 +20,23 @@ import SearchIcon from 'material-ui/svg-icons/action/search';
 import ArrowUpward from 'material-ui/svg-icons/navigation/arrow-upward';
 import ArrowDownward from 'material-ui/svg-icons/navigation/arrow-downward';
 import Divider from 'material-ui/Divider';
+import Dialog from 'material-ui/Dialog';
+import RaisedButton from 'material-ui/RaisedButton';
 /*--- Libraries ---*/
 import sortBy from 'sort-by';
 /*--- Shared ---*/
-import { API, URL } from '../shared/constants';
+import { API, URL, MESSAGE } from '../shared/constants';
 import utilities from '../shared/utilities';
+/*--- Styles ---*/
+import { mainStyles } from '../utils/styles';
 /*--- Children ---*/
 import Loading from './Loading';
 import PostTitle from './PostTitle';
 import PostActions from './PostActions';
+import DeleteDialog from './DeleteDialog';
+
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.min.css';
 
 const sortTarget = {
   Default: {
@@ -61,13 +69,22 @@ class Main extends Component {
     super(props, context);
     this.gotoPost = this.gotoPost.bind(this);
     this.vote = this.vote.bind(this);
+    this.filter = this.filter.bind(this);
     this.openSortMenu = this.openSortMenu.bind(this);
     this.onSortMenuRequestChange = this.onSortMenuRequestChange.bind(this);
-    this.sortChanged = this.sortChanged.bind(this);
     this.getArrow = this.getArrow.bind(this);
     this.sortItemSelectedAgain = this.sortItemSelectedAgain.bind(this);
     this.gotoDetails = this.gotoDetails.bind(this);
+    this.openDeletePostDialog = this.openDeletePostDialog.bind(this);
+    this.closeDeletePostDialog = this.closeDeletePostDialog.bind(this);
+    this.deletePost = this.deletePost.bind(this);
+    this.closeDoneDialog = this.closeDoneDialog.bind(this);
+
     this.state = {
+      filterText: '',
+      doneDialogOpen: false,
+      deletePostDialogOpen: false,
+      selectedPost: null,
       sortMenuOpen: false,
       posts: [],
       orgPosts: [],
@@ -97,6 +114,27 @@ class Main extends Component {
     this.context.router.history.push(URL.NEW_POST);
   };
 
+  filter = (value) => {
+    if (value.length < 1) {
+      this.setState({
+        filterText: value,
+        posts: Object.assign([], this.props.posts),
+      });
+    } else {
+      const newPosts = this.state.posts.filter((item) => {
+        return item.author.toLowerCase().indexOf(value) > -1 ||
+          item.title.toLowerCase().indexOf(value) > -1 ||
+          item.body.toLowerCase().indexOf(value) > -1
+      });
+
+      this.setState({
+        filterText: value,
+        posts: Object.assign([], newPosts),
+      });
+    }
+
+  };
+
   vote = (id, up) => {
     let updownString = API.vote.upVote;
     if (!up) {
@@ -115,10 +153,6 @@ class Main extends Component {
     this.setState({
       sortMenuOpen: value,
     });
-  };
-
-  sortChanged = (event, value) => {
-
   };
 
   sortPosts = (org, target, asc) => {
@@ -169,8 +203,8 @@ class Main extends Component {
     });
   };
 
-  gotoDetails = (id) => {
-    this.context.router.history.push(URL.POST.replace(':id', id));
+  gotoDetails = (id, category) => {
+    this.context.router.history.push(URL.POST.replace(':id', id).replace(':category', category));
   };
 
   getArrow = (value) => {
@@ -192,49 +226,55 @@ class Main extends Component {
     }
   };
 
+  openDeletePostDialog = (post) => {
+    this.setState({
+      selectedPost: post,
+      deletePostDialogOpen: true,
+    })
+  };
+
+  closeDeletePostDialog = () => {
+    this.setState({
+      selectedPost: null,
+      deletePostDialogOpen: false,
+    })
+  };
+
+  closeDoneDialog = () => {
+    this.setState({
+      selectedPost: null,
+      doneDialogOpen: false,
+    })
+  };
+
+  async deletePost() {
+    try {
+      await this.props.actions.deletePost(this.state.selectedPost.id);
+      await this.props.actions.loadPosts();
+      this.setState({
+        selectedPost: null,
+        deletePostDialogOpen:false,
+        doneDialogOpen: true,
+      })
+    } catch (error) {
+      toast(MESSAGE.AJAX_ERROR, {
+        type: toast.TYPE.ERROR,
+        position: toast.POSITION.TOP_RIGHT,
+      });
+    }
+  }
+
   render() {
-    const styles = {};
-
-    styles.toolbar = {
-      marginBottom: 20,
-    };
-
-    styles.toolbarTitle = {
-      marginLeft: 0,
-    };
-
-    styles.sortMenuTitle = {
-      cursor: 'pointer',
-    };
-
-    styles.gridList = {
-      height: '80vh',
-      overflowY: 'auto',
-      alignContent: 'flex-start'
-    };
-
-    styles.card = {
-      marginBottom: 20,
-    };
-
-    styles.cardText = {
-      padding: 0
-    };
-
-    styles.addButton = {
-      position: 'absolute',
-      right: 25,
-      bottom: 25
-    };
-
     const toolBar = (
-      this.props.user &&
       <Paper>
         <Toolbar>
           <ToolbarGroup firstChild={true}>
             <SearchIcon style={{marginLeft: 10}}/>
             <TextField
               id="text-field-default"
+              onChange={(e) => this.filter(e.target.value)}
+              value={this.state.filterText}
+              hintText="filter by author name, title, or body"
             />
           </ToolbarGroup>
           <ToolbarGroup>
@@ -247,7 +287,6 @@ class Main extends Component {
               }
               value={this.state.sortBy}
               open={this.state.sortMenuOpen}
-              onChange={this.sortChanged}
               onRequestChange={this.onSortMenuRequestChange}
               onItemTouchTap={this.sortItemSelectedAgain}
             >
@@ -266,7 +305,7 @@ class Main extends Component {
                 />
               )}
             </IconMenu>
-            <span onClick={this.openSortMenu} style={styles.sortMenuTitle}>
+            <span onClick={this.openSortMenu} style={mainStyles.sortMenuTitle}>
                Sort List
             </span>
           </ToolbarGroup>
@@ -281,7 +320,15 @@ class Main extends Component {
           withOverLay={true}
         />
         }
-        <div style={styles.toolbar}>
+        <ToastContainer
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          pauseOnHover
+          style={{zIndex: 10000}}
+        />
+        <div style={mainStyles.toolbar}>
           {toolBar}
         </div>
 
@@ -289,14 +336,14 @@ class Main extends Component {
           cols={1}
           cellHeight={150}
           padding={10}
-          style={styles.gridList}
+          style={mainStyles.gridList}
         >
-          {this.props.user && this.state.posts && this.state.posts.map((post) =>
+          {this.state.posts && this.state.posts.map((post) =>
             <GridTile
               key={post.id}
             >
               <Card
-                style={styles.card}
+                style={mainStyles.card}
               >
                 < PostTitle
                   post={post}
@@ -305,21 +352,41 @@ class Main extends Component {
                   post={post}
                   onShow={this.gotoDetails}
                   onVote={this.vote}
+                  onDelete={() => this.openDeletePostDialog(post)}
                 />
               </Card>
             </GridTile>
           )}
         </GridList>
 
-        {this.props.user &&
         <FloatingActionButton
-          style={styles.addButton}
+          style={mainStyles.addButton}
           secondary={true}
           onClick={this.gotoPost}
         >
           <ContentAdd/>
         </FloatingActionButton>
         }
+        <DeleteDialog
+          open={this.state.deletePostDialogOpen}
+          onCancel={this.closeDeletePostDialog}
+          onDelete={this.deletePost}
+        />
+        <Dialog
+          title="Deleted"
+          actions={
+            <RaisedButton
+              label="Close"
+              onClick={() => this.closeDoneDialog()}
+            />
+          }
+          modal={true}
+          open={this.state.doneDialogOpen}
+        >
+          <p>
+            The post has been deleted!
+          </p>
+        </Dialog>
       </div>
     );
   }
@@ -339,7 +406,7 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-  actions: bindActionCreators({loadPosts, voteForPost}, dispatch)
+  actions: bindActionCreators({loadPosts, voteForPost, deletePost}, dispatch)
 });
 
 export default connect(

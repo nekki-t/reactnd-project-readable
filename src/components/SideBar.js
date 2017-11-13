@@ -16,6 +16,9 @@ import { loadCategories, categoriesLoaded } from '../actions/categoriesAction';
 /*--- Shared ---*/
 import { URL } from '../shared/constants';
 
+/*--- Styles ---*/
+import { sideBarStyles } from '../utils/styles';
+
 const ROOT_CATEGORY = 'All';
 
 class SideBar extends Component {
@@ -30,7 +33,7 @@ class SideBar extends Component {
 
   componentWillMount() {
     const pathname = this.context.router.route.location.pathname;
-    if (pathname.indexOf('/posts/') > -1){
+    if (pathname.indexOf('/posts/') > -1) {
       const category = pathname.replace('/posts/', '');
       this.setState({
         selectedCategory: category
@@ -50,7 +53,7 @@ class SideBar extends Component {
     this.setState({
       selectedCategory: filterText
     });
-    if(filterText === ROOT_CATEGORY) {
+    if (filterText === ROOT_CATEGORY) {
       this.context.router.history.push(URL.ROOT);
     } else {
       this.context.router.history.push(URL.CATEGORY.replace(':category', filterText));
@@ -65,7 +68,7 @@ class SideBar extends Component {
     const defaultStyle = {
       color: '#51ff3a',
     };
-    if(this.state.selectedCategory === category) {
+    if (this.state.selectedCategory === category) {
       return selectedStyle;
     } else {
       return defaultStyle;
@@ -73,29 +76,18 @@ class SideBar extends Component {
   };
 
   render() {
-    const styles = {};
-    styles.drawer = {
-      backgroundColor: 'rgba(24, 26, 27, 0.5)',
-      appBar: {
-        backgroundColor: '#FF4081',
-      },
-      title: {
-        cursor: 'pointer',
-      }
-    };
-
     return (
       <Drawer
         docked={false}
         open={this.props.opened}
         onRequestChange={this.props.requestChange}
-        containerStyle={styles.drawer}
+        containerStyle={sideBarStyles.drawer}
       >
         <AppBar
           title={
-            <span style={styles.drawer.title}>Categories</span>
+            <span style={sideBarStyles.drawer.title}>Categories</span>
           }
-          style={styles.drawer.appBar}
+          style={sideBarStyles.drawer.appBar}
           iconElementLeft={
             <IconButton><ForumIcon/></IconButton>
           }

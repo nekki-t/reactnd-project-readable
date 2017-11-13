@@ -8,7 +8,6 @@ import {
   COMMENT_DELETING,
   COMMENT_DELETED,
   COMMENT_VOTING,
-  COMMENT_VOTED,
 
 } from './actionTypes';
 
@@ -71,6 +70,25 @@ export const updateComment = (parentId, id, params) => {
           dispatch(loadPost(parentId))
         }
       );
+  }
+};
+
+export const deleteComment = (parentId, id) => {
+  return dispatch => {
+    dispatch({
+      type: COMMENT_DELETING,
+      loading: true,
+    });
+    return readableApi.deleteComment(id)
+      .then(
+        response => {
+          dispatch({
+            type: COMMENT_DELETED,
+          });
+          dispatch(loadComments(parentId));
+          dispatch(loadPost(parentId))
+        }
+      )
   }
 };
 

@@ -8,19 +8,13 @@ import './index.css';
 import App from './App';
 import registerServiceWorker from './registerServiceWorker';
 
-import { URL } from './shared/constants';
-
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import createStore from "./createStore";
-
-import { initialize } from './actions/sessionAction';
 
 injectTapEventPlugin();
 
 const store = createStore();
-if (window.location.pathname !== URL.LOGIN) {
-  store.dispatch(initialize());
-}
+
 
 ReactDOM.render(
   <Provider store={store}>

@@ -1,146 +1,123 @@
 import {
   START_LOAD_POSTS,
   POSTS_LOADED,
-  POSTS_LOAD_FAILED,
   POST_CREATING,
   POST_CREATED,
-  POST_CREATE_FAILED,
-  NEW_POST,
+  POST_UPDATING,
+  POST_UPDATED,
+  POST_DELETING,
+  POST_DELETED,
   POST_DETAILS_LOADING,
   POST_DETAILS_LOADED,
-  POST_DETAILS_LOAD_FAILED,
   POST_VOTING,
-  POST_VOTE_FAILED,
 } from './actionTypes';
 import readableApi from '../api/readableApi';
 
-export const startPostsLoading = () => ({
-  type: START_LOAD_POSTS,
-  loading: true,
-  posts: [],
-});
-
-export const postsLoaded = (results) => ({
-  type: POSTS_LOADED,
-  loading: false,
-  posts: results,
-});
-
-export const initializePost = () => ({
-  type: NEW_POST,
-  loading: false,
-  created: false,
-});
-
-export const startPosting = () => ({
-  type: POST_CREATING,
-  loading: true,
-});
-
-export const postCreated = () => ({
-  type: POST_CREATED,
-  loading: false,
-  created: true,
-});
-
-export const postsLoadFailed = (errorMessage) => ({
-  type: POSTS_LOAD_FAILED,
-  loading: false,
-  failed: true,
-  errorMessage,
-});
-
-export const postCreateFailed = (errorMessage) => ({
-  type: POST_CREATE_FAILED,
-  loading: false,
-  failed: true,
-  errorMessage,
-});
-
-export const postDetailsLoading = () => ({
-  type: POST_DETAILS_LOADING,
-  loading: true,
-});
-
-export const postDetailsLoaded = (post) => ({
-  type: POST_DETAILS_LOADED,
-  loading: false,
-  post,
-});
-
-export const postDetailsLoadFailed = (errorMessage) => ({
-  type: POST_DETAILS_LOAD_FAILED,
-  loading: false,
-  errorMessage,
-});
-
-export const postVoting = () => ({
-  type: POST_VOTING,
-  loading: true,
-});
-
-export const postVoteFailed = (errorMessage) => ({
-  type: POST_VOTE_FAILED,
-  loading: false,
-  voteFailed: true,
-  errorMessage,
-});
-
 export const loadPosts = () => {
   return dispatch => {
-    dispatch(startPostsLoading());
+    dispatch({
+      type: START_LOAD_POSTS,
+      loading: true,
+      posts: [],
+    });
     return readableApi.fetchPosts()
       .then(
         response => {
-          dispatch(postsLoaded(response.data));
+          dispatch({
+            type: POSTS_LOADED,
+            loading: false,
+            posts: response.data,
+          });
         }
       )
-      .catch(error => {
-        postsLoadFailed(error);
-      });
   };
 };
 
 export const loadPost = (id) => {
   return dispatch => {
-    dispatch(postDetailsLoading());
+    dispatch({
+      type: POST_DETAILS_LOADING,
+      loading: true,
+    });
     return readableApi.getPost(id)
       .then(
         response => {
-          dispatch(postDetailsLoaded(response.data));
+          dispatch({
+            type: POST_DETAILS_LOADED,
+            loading: false,
+            post: response.data,
+          });
         }
       )
-      .catch(error => {
-        postDetailsLoadFailed(error);
-      })
   }
 };
 
 export const post = (post) => {
   return dispatch => {
-    dispatch(startPosting());
+    dispatch({
+      type: POST_CREATING,
+      loading: true,
+    });
     return readableApi.createPost(post)
       .then(
         response => {
-          dispatch(postCreated());
+          dispatch({
+            type: POST_CREATED,
+            loading: false,
+          });
         }
-      ).catch(error => {
-        postCreateFailed(error);
-      })
+      )
   }
 };
 
+export const updatePost = (id, params) => {
+  return dispatch => {
+    dispatch({
+      type: POST_UPDATING,
+      loading: true,
+    });
+    return readableApi.updatePost(id, params)
+      .then(
+        response => {
+          dispatch({
+            type: POST_UPDATED,
+            loading: false,
+          })
+        }
+      );
+  }
+};
+
+export const deletePost = (id) => {
+  return dispatch => {
+    dispatch({
+      type: POST_DELETING,
+      loading: true,
+    });
+    return readableApi.deletePost(id)
+      .then(
+        response => {
+          dispatch({
+            type: POST_DELETED,
+          });
+        }
+      )
+  }
+};
+
+
 export const voteForPost = (id, voteString) => {
   return dispatch => {
-    dispatch(postVoting());
+    dispatch({
+      type: POST_VOTING,
+      loading: true,
+    });
     return readableApi.voteForPost(id, voteString)
       .then(
         response => {
           dispatch(loadPosts());
           dispatch(loadPost(id));
         }
-      ).catch(error => {
-        postVoteFailed(error);
-      })
+      )
   }
 };

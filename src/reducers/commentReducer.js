@@ -1,12 +1,10 @@
 import {
   COMMENT_LOADING,
   COMMENT_LOADED,
-  COMMENT_CREATING,
   COMMENT_CREATED,
   COMMENT_UPDATING,
   COMMENT_UPDATED,
   COMMENT_VOTING,
-  COMMENT_VOTED,
   COMMENT_DELETING,
   COMMENT_DELETED,
 } from '../actions/actionTypes';
@@ -16,14 +14,12 @@ const initialState = {
   comments: [],
   comment: null,
   commentCreated: false,
-  errorMessage: '',
 };
 
 export default (state = initialState, action = {}) => {
   const {
     loading,
     comments,
-    errorMessage,
   } = action;
 
   switch (action.type) {
@@ -59,6 +55,17 @@ export default (state = initialState, action = {}) => {
         ...state,
         loading,
       };
+    case COMMENT_DELETING:
+      return {
+        ...state,
+        loading,
+      };
+    case COMMENT_DELETED:
+      return {
+        ...state,
+        loading,
+      };
+
     default:
       return state;
   }

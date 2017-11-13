@@ -6,10 +6,13 @@ export const API = {
   posts: `${API_URL}/posts`,
   post: `${API_URL}/posts/:id`,
   post_vote: `${API_URL}/posts/:id`,
+  updatePost: `${API_URL}/posts/:id`,
+  deletePost: `${API_URL}/posts/:id`,
   comments: `${API_URL}/posts/:id/comments`,
   createComment: `${API_URL}/comments`,
   updateComment: `${API_URL}/comments/:id`,
   comment_vote: `${API_URL}/comments/:id`,
+  deleteComment: `${API_URL}/comments/:id`,
   params: {
     category: ':category',
     posts: ':posts',
@@ -25,7 +28,8 @@ export const URL = {
   LOGIN: '/login',
   ROOT: '/',
   CATEGORY: '/posts/:category',
-  POST: '/post/:id',
+  POST: '/:category/:id',
+  POST_EDIT: '/post/:id/edit',
   NEW_POST: '/post',
 };
 
@@ -46,4 +50,8 @@ export const POST_ATTR = {
   voteScore: 'voteScore',
   deleted: 'deleted',
   commentCount: 'commentCount'
+};
+
+export const MESSAGE = {
+  AJAX_ERROR: 'Sorry. There was something wrong. Please try this again later.',
 };

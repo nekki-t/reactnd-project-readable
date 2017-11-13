@@ -3,8 +3,14 @@ import PropTypes from 'prop-types';
 /*--- Redux ---*/
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { loadPost, loadPosts, voteForPost } from '../actions/postsAction';
-import { createComment, loadComments, voteForComment, updateComment } from '../actions/commentsAction';
+import { loadPost, loadPosts, voteForPost, deletePost } from '../actions/postsAction';
+import {
+  createComment,
+  loadComments,
+  updateComment,
+  voteForComment,
+  deleteComment,
+} from '../actions/commentsAction';
 /*--- Material UI ---*/
 import { Card, CardActions, CardHeader, CardText } from 'material-ui/Card';
 import Paper from 'material-ui/Paper';
@@ -22,9 +28,13 @@ import Dialog from 'material-ui/Dialog';
 import PostTitle from './PostTitle';
 import PostActions from './PostActions';
 import Comment from './Comment';
+import DeleteDialog from './DeleteDialog';
 /*--- Shared ---*/
-import { API, LIMITATION } from '../shared/constants';
+import { API, LIMITATION, URL, MESSAGE } from '../shared/constants';
 import utilities from '../shared/utilities';
+
+/*--- styles ---*/
+import { detailsStyles } from '../utils/styles';
 
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.css';
@@ -34,6 +44,10 @@ class Details extends Component {
   constructor() {
     super();
     this.goBack = this.goBack.bind(this);
+    this.gotoEditPost = this.gotoEditPost.bind(this);
+    this.deletePost = this.deletePost.bind(this);
+    this.openDeletePostDialog = this.openDeletePostDialog.bind(this);
+    this.closeDeletePostDialog = this.closeDeletePostDialog.bind(this);
     this.deleteComment = this.deleteComment.bind(this);
     this.openAddCommentDialog = this.openAddCommentDialog.bind(this);
     this.openDeleteCommentDialog = this.openDeleteCommentDialog.bind(this);
@@ -48,6 +62,7 @@ class Details extends Component {
     this.state = {
       comments: '',
       commentsShown: false,
+      deletePostDialogOpen: false,
       addCommentDialogOpen: false,
       editCommentDialogOpen: false,
       deleteCommentDialogOpen: false,
@@ -69,6 +84,8 @@ class Details extends Component {
     this.context.router.history.goBack();
   };
 
+  /* === < POST > =================================================================== */
+
   vote = (id, up) => {
     let updownString = API.vote.upVote;
     if (!up) {
@@ -77,6 +94,36 @@ class Details extends Component {
     this.props.actions.voteForPost(id, updownString);
   };
 
+  gotoEditPost = () => {
+    this.context.router.history.push(URL.POST_EDIT.replace(':id', this.props.post.id));
+
+  };
+
+  closeDeletePostDialog = () => {
+    this.setState({
+      deletePostDialogOpen: false
+    })
+  };
+
+  openDeletePostDialog = () => {
+    this.setState({
+      deletePostDialogOpen: true
+    });
+  };
+
+  async deletePost() {
+    try {
+      await this.props.actions.deletePost(this.props.post.id);
+      this.context.router.history.goBack();
+    } catch (error) {
+      toast(MESSAGE.AJAX_ERROR, {
+        type: toast.TYPE.ERROR,
+        position: toast.POSITION.TOP_RIGHT,
+      });
+    }
+  }
+
+  /* === < Comments > =================================================================== */
   voteForComment = (parentId, id, up) => {
     let updownString = API.vote.upVote;
     if (!up) {
@@ -161,23 +208,35 @@ class Details extends Component {
     return submittable;
   };
 
-  addComment = () => {
+  async addComment() {
 
     let authorName = this.state.author.trim();
     let newComment = this.state.commentText.trim();
 
     if (this.validateComment(true, authorName, newComment)) {
       const comment = {};
-      comment.id = Date.now();
+      comment.id = Math.random().toString(36);
       comment.timestamp = Date.now();
       comment.parentId = this.props.post.id;
       comment.body = newComment;
       comment.author = authorName;
 
-      this.props.actions.createComment(comment);
-      this.closeAddCommentDialog();
+      try {
+        await this.props.actions.createComment(comment);
+        toast('Comment has been created!', {
+          type: toast.TYPE.SUCCESS,
+          position: toast.POSITION.TOP_RIGHT,
+        });
+      } catch (error) {
+        toast(MESSAGE.AJAX_ERROR, {
+          type: toast.TYPE.ERROR,
+          position: toast.POSITION.TOP_RIGHT,
+        });
+      } finally {
+        this.closeAddCommentDialog();
+      }
     }
-  };
+  }
 
   /*--- edit comment ---*/
   openEditCommentDialog = (comment) => {
@@ -199,7 +258,7 @@ class Details extends Component {
     });
   };
 
-  updateComment = () => {
+  async updateComment() {
     let updateComment = this.state.commentText.trim();
 
     if (this.validateComment(false, null, updateComment)) {
@@ -208,19 +267,46 @@ class Details extends Component {
         body: updateComment,
       };
 
-      this.props.actions.updateComment(
-        this.state.selectedComment.parentId,
-        this.state.selectedComment.id,
-        params);
-      this.closeEditCommentDialog();
+      try {
+        await this.props.actions.updateComment(
+          this.state.selectedComment.parentId,
+          this.state.selectedComment.id,
+          params);
+        toast('Comment has been updated!', {
+          type: toast.TYPE.SUCCESS,
+          position: toast.POSITION.TOP_RIGHT,
+        });
+      } catch (error) {
+        toast(MESSAGE.AJAX_ERROR, {
+          type: toast.TYPE.ERROR,
+          position: toast.POSITION.TOP_RIGHT,
+        });
+      } finally {
+        this.closeEditCommentDialog();
+      }
     }
-  };
-
+  }
 
   /*--- delete  comment---*/
-  deleteComment = (parentId, id) => {
-
-  };
+  async deleteComment() {
+    try {
+      await this.props.actions.deleteComment(
+        this.state.selectedComment.parentId,
+        this.state.selectedComment.id
+      );
+      toast('Comment has been deleted!', {
+        type: toast.TYPE.SUCCESS,
+        position: toast.POSITION.TOP_RIGHT,
+      });
+    } catch (error) {
+      toast(MESSAGE.AJAX_ERROR, {
+        type: toast.TYPE.ERROR,
+        position: toast.POSITION.TOP_RIGHT,
+      });
+    } finally {
+      this.closeDeleteCommentDialog();
+    }
+  }
 
   openDeleteCommentDialog = (comment) => {
     this.setState({
@@ -237,114 +323,16 @@ class Details extends Component {
   };
 
   render() {
-    const styles = {};
-    styles.text = {
-      backgroundColor: '#ffe2ea',
-      fontFamily: "'Acme', sans-serif",
-      fontSize: 16,
-      wordWrap: 'break-word',
-    };
-
-    styles.wrapper = {
-      display: 'flex',
-      flexDirection: 'column'
-    };
-
-    styles.commentArea = {
-      height: '55vh',
-      padding: 3,
-      overflowY: 'scroll',
-      backgroundColor: '#f6f6f6',
-      padding: 10,
-    };
-
-    styles.comments = {
-      display: 'flex',
-      alignItems: 'center',
-      count: {
-        marginLeft: 5,
-      }
-    };
-
-    styles.commentsCard = {
-      marginTop: 5,
-    };
-
-    styles.comment = {
-      width: '60%',
-      padding: 10,
-      marginBottom: 10,
-    };
-
-    styles.commentActionArea = {
-      display: 'flex',
-      justifyContent: 'flex-end',
-      alignItems: 'center',
-    };
-
-    styles.commentBody = {
-      marginBottom: 10,
-      wordWrap: 'break-word',
-      fontFamily: "'Acme', sans-serif",
-      fontSize: 16,
-    };
-
-    styles.commentInfo = {
-      fontSize: 12,
-      textAlign: 'right',
-      display: 'flex',
-      justifyContent: 'flex-end',
-      marginBottom: 5,
-      header: {
-        color: '#ff1271',
-        marginRight: 5,
-      },
-      postedAt: {},
-      author: {
-        marginLeft: 20
-      }
-    };
-
-    styles.commentVoteActionArea = {
-      display: 'flex',
-      justifyContent: 'space-between'
-    };
-
-    styles.voteArea = {
-      display: 'flex',
-      alignItems: 'center',
-    };
-
-    styles.editArea = {};
-
-    styles.commentIconSize = {
-      width: 20,
-      height: 20,
-    };
-
-    styles.commentIconButtonSize = {
-      width: 40,
-      height: 40,
-      padding: 10,
-    };
-
-    styles.commentButtons = {
-      width: 50
-    };
-
-    styles.actionButton = {
-      marginLeft: 20,
-    };
 
     const cardTitle = (
-      <div style={styles.comments}>
+      <div style={detailsStyles.comments}>
         <CommentIcon color={orange500}/>
-        <div style={styles.comments.count}>Comments</div>
+        <div style={detailsStyles.comments.count}>Comments</div>
       </div>
     );
 
     return (
-      <div style={styles.wrapper}>
+      <div style={detailsStyles.wrapper}>
         <ToastContainer
           autoClose={3000}
           hideProgressBar={false}
@@ -353,59 +341,79 @@ class Details extends Component {
           pauseOnHover
           style={{zIndex: 10000}}
         />
-        {this.props.post &&
+        {!this.props.loading && this.props.post && !this.props.post.hasOwnProperty('id') &&
+          <Card>
+            <CardText>
+              <h3>
+                The post for this url does not exist or has already been deleted.
+              </h3>
+            </CardText>
+            <CardActions style={detailsStyles.noDataActionArea}>
+              <RaisedButton
+                label="Top Page"
+                primary={true}
+                onClick={() => this.context.router.history.push(URL.ROOT)}
+              />
+            </CardActions>
+          </Card>
+        }
+        {this.props.post && this.props.post.hasOwnProperty('id') &&
         <Card>
           <PostTitle
             post={this.props.post}
           />
           <CardText
-            style={styles.text}
+            style={detailsStyles.text}
           >
-            {this.props.post && this.props.post.body}
+            {this.props.post && this.props.post.body &&
+            <p dangerouslySetInnerHTML={{__html: this.props.post.body.replace(/\n/g, '</br>')}}/>
+            }
           </CardText>
           <PostActions
             post={this.props.post}
             onBack={this.goBack}
             onVote={this.vote}
+            onEdit={this.gotoEditPost}
+            onDelete={this.openDeletePostDialog}
           />
         </Card>
         }
-        {this.props.comments &&
+        {this.props.post && this.props.post.hasOwnProperty('id') && this.props.comments &&
         <Card
-          style={styles.commentsCard}
+          style={detailsStyles.commentsCard}
         >
           <CardHeader
             title={cardTitle}
           />
           <CardText
-            style={styles.commentArea}
+            style={detailsStyles.commentArea}
           >
             {this.props.comments.map((comment, index) =>
               <div key={index} style={this.getCommentLayoutStyle(index)}>
-                <Paper style={styles.comment}>
-                  <div style={styles.commentBody}>
+                <Paper style={detailsStyles.comment}>
+                  <div style={detailsStyles.commentBody}>
                     {comment.body}
                   </div>
-                  <div style={styles.commentInfo}>
-                    <div style={styles.commentInfo.postedAt}>
-                      <span style={styles.commentInfo.header}>
+                  <div style={detailsStyles.commentInfo}>
+                    <div style={detailsStyles.commentInfo.postedAt}>
+                      <span style={detailsStyles.commentInfo.header}>
                         posted at:
                       </span>
                       {utilities.getFormattedDateTime(comment.timestamp)}
                     </div>
-                    <div style={styles.commentInfo.author}>
-                      <span style={styles.commentInfo.header}>
+                    <div style={detailsStyles.commentInfo.author}>
+                      <span style={detailsStyles.commentInfo.header}>
                         by
                       </span>
                       {comment.author}
                     </div>
                   </div>
                   <Divider/>
-                  <div style={styles.commentVoteActionArea}>
-                    <div style={styles.voteArea}>
+                  <div style={detailsStyles.commentVoteActionArea}>
+                    <div style={detailsStyles.voteArea}>
                       <IconButton
-                        iconStyle={styles.commentIconSize}
-                        style={styles.commentIconButtonSize}
+                        iconStyle={detailsStyles.commentIconSize}
+                        style={detailsStyles.commentIconButtonSize}
                         onClick={() => this.voteForComment(comment.parentId, comment.id, true)}
                       >
                         <ThumbUpIcon
@@ -414,17 +422,17 @@ class Details extends Component {
                       </IconButton>
                       <div>{comment.voteScore}</div>
                       <IconButton
-                        iconStyle={styles.commentIconSize}
-                        style={styles.commentIconButtonSize}
+                        iconStyle={detailsStyles.commentIconSize}
+                        style={detailsStyles.commentIconButtonSize}
                         onClick={() => this.voteForComment(comment.parentId, comment.id, false)}
                       >
                         <ThumbDownIcon color={red500}/>
                       </IconButton>
                     </div>
-                    <div style={styles.editArea}>
+                    <div style={detailsStyles.editArea}>
                       <IconButton
-                        iconStyle={styles.commentIconSize}
-                        style={styles.commentIconButtonSize}
+                        iconStyle={detailsStyles.commentIconSize}
+                        style={detailsStyles.commentIconButtonSize}
                         onClick={() => this.openDeleteCommentDialog(comment)}
                       >
                         <DeleteIcon
@@ -432,8 +440,8 @@ class Details extends Component {
                         />
                       </IconButton>
                       <IconButton
-                        iconStyle={styles.commentIconSize}
-                        style={styles.commentIconButtonSize}
+                        iconStyle={detailsStyles.commentIconSize}
+                        style={detailsStyles.commentIconButtonSize}
                         onClick={() => this.openEditCommentDialog(comment)}
                       >
                         <EditIcon
@@ -447,7 +455,7 @@ class Details extends Component {
             )}
           </CardText>
           <CardActions
-            style={styles.commentActionArea}
+            style={detailsStyles.commentActionArea}
           >
             <RaisedButton
               label="Add Comment"
@@ -459,6 +467,13 @@ class Details extends Component {
         }
 
         <div>
+
+          <DeleteDialog
+            open={this.state.deletePostDialogOpen}
+            onCancel={this.closeDeletePostDialog}
+            onDelete={this.deletePost}
+          />
+
           <Dialog
             title="Delete this comment"
             actions={
@@ -470,8 +485,8 @@ class Details extends Component {
                 <RaisedButton
                   label="Delete"
                   secondary={true}
-                  onClick={() => this.deleteComment(this.state.selectedComment)}
-                  style={styles.actionButton}
+                  onClick={() => this.deleteComment()}
+                  style={detailsStyles.actionButton}
                 />,
               ]
             }
@@ -479,6 +494,15 @@ class Details extends Component {
             open={this.state.deleteCommentDialogOpen}
           >
             Are you sure to delete this comment?
+
+            {this.state.selectedComment &&
+            <Card style={detailsStyles.confirmDeleteCommentCard}>
+              <CardText>
+                <h3>author: {this.state.selectedComment.author}</h3>
+                {this.state.selectedComment.body}
+              </CardText>
+            </Card>
+            }
           </Dialog>
         </div>
 
@@ -542,10 +566,12 @@ const mapDispatchToProps = (dispatch) => ({
       loadPost,
       loadPosts,
       voteForPost,
+      deletePost,
       loadComments,
       voteForComment,
       createComment,
       updateComment,
+      deleteComment,
     }, dispatch)
 });
 
